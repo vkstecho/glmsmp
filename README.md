@@ -1,2 +1,0 @@
-# glmsmp
-GLS MP System
