@@ -37,6 +37,7 @@
   import { getDatabase, ref, set, get, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
   import { getAuth, signInWithCustomToken, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+  import { getStorage, ref as sRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyC3fAuAp404MbZPZfVH7M3oCqK3tM1mQhg",
@@ -86,6 +87,13 @@
     // ── Cloud Functions exposed for secure server calls ──
     window._fbCall = (name, data) => httpsCallable(functions, name)(data);
     window._fbReady = true;
+    // ── Firebase Storage for selfie uploads ──
+    const storage = getStorage(app);
+    window._fbUploadSelfie = async function(base64Data, path){
+      const storageRef = sRef(storage, path);
+      await uploadString(storageRef, base64Data, 'data_url');
+      return await getDownloadURL(storageRef);
+    };
   }catch(e){ console.error('Firebase init error:',e); }
 
   const fireEvent = ()=>{ try{ document.dispatchEvent(new Event('firebase-ready')); }catch(e){} };
@@ -95,7 +103,7 @@
     setTimeout(fireEvent, 50);
   }
 </script>
-<script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+<!-- Razorpay removed -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <style>
@@ -480,23 +488,6 @@ body{
 .fp-sub{ font-size:13px;color:var(--muted2);margin-bottom:28px;line-height:1.6; }
 .fp-skip{ font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer;margin-top:16px; }
 
-/* ══ PASSWORD STRENGTH METER ══ */
-.pass-strength{ height:4px; border-radius:2px; margin-top:6px; transition:all .3s; background:var(--border2); }
-.pass-strength-lbl{ font-size:10px; margin-top:3px; font-weight:700; }
-.strength-0{ background:var(--border2); }
-.strength-1{ background:#f43f5e; }
-.strength-2{ background:#f97316; }
-.strength-3{ background:#facc15; }
-.strength-4{ background:#22c55e; }
-/* ══ SECURITY BADGE ══ */
-.sec-badge{ display:inline-flex; align-items:center; gap:5px; padding:5px 10px;
-  border-radius:8px; font-size:11px; font-weight:800; }
-.sec-badge.bound{ background:rgba(34,197,94,.15); color:#22c55e; border:1px solid rgba(34,197,94,.3); }
-.sec-badge.unbound{ background:rgba(249,115,22,.15); color:#f97316; border:1px solid rgba(249,115,22,.3); }
-/* ══ MANAGER CHIP ══ */
-.mgr-chip{ display:flex; align-items:center; gap:10px; padding:10px 12px;
-  background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.25);
-  border-radius:10px; margin-bottom:8px; }
 /* ══ MY SHIFT ══ */
 .my-shift-hero{
   background:linear-gradient(135deg,rgba(249,115,22,.2),rgba(96,165,250,.15));
@@ -1532,15 +1523,9 @@ setTimeout(_forceLogin, 10000);
       <button class="big-btn" onclick="goToStep2()" style="margin-top:6px">
         आगे बढ़ें →
       </button>
-      <div style="text-align:center;margin-top:14px;display:flex;flex-direction:column;gap:6px">
-        <div>
-          <span style="font-size:12px;color:var(--muted2)">Admin हैं? </span>
-          <span onclick="showAdminLogin()" style="font-size:12px;color:var(--m1);font-weight:700;cursor:pointer;text-decoration:underline">🛡️ Admin Login →</span>
-        </div>
-        <div>
-          <span style="font-size:12px;color:var(--muted2)">Manager हैं? </span>
-          <span onclick="showManagerLogin()" style="font-size:12px;color:#22c55e;font-weight:700;cursor:pointer;text-decoration:underline">👔 Manager Login →</span>
-        </div>
+      <div style="text-align:center;margin-top:14px">
+        <span style="font-size:12px;color:var(--muted2)">Admin हैं? </span>
+        <span onclick="showAdminLogin()" style="font-size:12px;color:var(--m1);font-weight:700;cursor:pointer">Admin Login →</span>
       </div>
     </div>
   </div>
@@ -1638,10 +1623,6 @@ setTimeout(_forceLogin, 10000);
     <div class="fp-skip" onclick="skipFingerprint()">
       Password से login करें →
     </div>
-    <div style="margin-top:14px;display:flex;gap:20px;justify-content:center">
-      <span onclick="showAdminLoginFromFp()" style="font-size:12px;color:var(--m1);font-weight:700;cursor:pointer;text-decoration:underline">🛡️ Admin Login</span>
-      <span onclick="showManagerLoginFromFp()" style="font-size:12px;color:#22c55e;font-weight:700;cursor:pointer;text-decoration:underline">👔 Manager Login</span>
-    </div>
   </div>
 
   <!-- ══ ADMIN LOGIN ══ -->
@@ -1671,38 +1652,6 @@ setTimeout(_forceLogin, 10000);
         </div>
       </div>
       <button class="big-btn" onclick="tryAdminLogin()">🔐 Login करें</button>
-      <button onclick="backToStep1()" style="width:100%;padding:12px;margin-top:8px;background:none;
-        border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer">← वापस</button>
-    </div>
-  </div>
-
-  <!-- ══ MANAGER LOGIN ══ -->
-  <div id="managerLoginPanel" style="display:none">
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="font-size:44px;margin-bottom:6px">👔</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;
-        background:linear-gradient(135deg,#22c55e,#16a34a);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
-        MANAGER LOGIN
-      </div>
-      <div style="font-size:12px;color:var(--muted2);margin-top:3px">Schedule · Reports · Leave Management</div>
-    </div>
-    <div class="login-card">
-      <div class="err-msg" id="loginErrManager"></div>
-      <div class="inp-group">
-        <label class="inp-label">Username</label>
-        <input class="inp-field" type="text" id="mUser" autocomplete="off"
-          onkeydown="if(event.key==='Enter')document.getElementById('mPass').focus()">
-      </div>
-      <div class="inp-group">
-        <label class="inp-label">Password</label>
-        <div style="position:relative">
-          <input class="inp-field" type="password" id="mPass"
-            onkeydown="if(event.key==='Enter')tryManagerLogin()">
-          <button onclick="togglePass('mPass',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);
-            background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px">👁</button>
-        </div>
-      </div>
-      <button class="big-btn" onclick="tryManagerLogin()" style="background:linear-gradient(135deg,#22c55e,#15803d)">🔑 Login करें</button>
       <button onclick="backToStep1()" style="width:100%;padding:12px;margin-top:8px;background:none;
         border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer">← वापस</button>
     </div>
@@ -1788,8 +1737,6 @@ setTimeout(_forceLogin, 10000);
     <div id="homeSections"></div>
     <div class="stitle">आज का रोस्टर</div>
     <div id="homeRoster"></div>
-    <!-- Admin-only: User Management Panel -->
-    <div id="homeUserMgmt" style="display:none;margin-top:8px"></div>
   </div>
   <!-- Personal shift view for workers -->
   <div id="homeWorkerView" style="display:none">
@@ -2862,8 +2809,7 @@ function getInst()     { return _cache.instructions|| DEFAULT_INSTRUCTIONS; }
 // ════════════════════════════════════════
 let SESSION = { role:'', name:'', empId:'', empObjId:'', dept:'', deviceId:'' };
 function isAdmin(){ return SESSION.role==='admin'; }
-function isMgr(){ return SESSION.role==='manager' || (SESSION.role==='worker' && (SESSION.dept==='MGR' || (SESSION.empId==='30000463'))); }
-function isManager(){ return SESSION.role==='manager'; }
+function isMgr(){ return SESSION.role==='worker' && (SESSION.dept==='MGR' || (SESSION.empId==='30000463')); }
 function isAdminOrMgr(){ return isAdmin() || isMgr(); }
 function isGuest(){ return SESSION.role==='guest'; }
 function canEditInst(){ return isAdmin() || SESSION.name===CFG.supervisorInstructor; }
@@ -3097,86 +3043,6 @@ function extendUserExpiry(empId, days){
   });
 }
 
-// ── ADMIN USER MANAGEMENT DASHBOARD ──
-async function renderUserManagement(container, emps){
-  container.innerHTML = `<div class="stitle" style="margin-top:4px">🛡️ User Management (Admin)</div>
-    <div id="userMgmtStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
-      <div class="stat-card"><div class="stat-val" style="color:#38bdf8" id="umTotalUsers">—</div><div class="stat-lbl">कुल Users</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:#22c55e" id="umActiveUsers">—</div><div class="stat-lbl">Active</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:#f43f5e" id="umExpiredUsers">—</div><div class="stat-lbl">Expired</div></div>
-    </div>
-    <div id="userMgmtList"></div>`;
-
-  try{
-    const approvals = await fbGet('deviceApprovals');
-    const now = new Date();
-    let active=0, expired=0;
-    const items = [];
-
-    emps.forEach(e=>{
-      const a = approvals?.[e.id];
-      let daysLeft = 45, status = 'new';
-      if(a && a.validTill){
-        const vt = new Date(a.validTill);
-        daysLeft = Math.ceil((vt - now)/86400000);
-        status = daysLeft > 0 ? 'active' : 'expired';
-        if(status==='active') active++; else expired++;
-      } else if(a){ active++; }
-      items.push({emp:e, a, daysLeft, status});
-    });
-
-    document.getElementById('umTotalUsers').textContent = emps.length;
-    document.getElementById('umActiveUsers').textContent = active;
-    document.getElementById('umExpiredUsers').textContent = expired;
-
-    const listEl = document.getElementById('userMgmtList');
-    if(!listEl) return;
-    // Show expired/expiring soon first
-    items.sort((a,b)=>(a.daysLeft||999)-(b.daysLeft||999));
-    listEl.innerHTML = items.slice(0,20).map(({emp,a,daysLeft,status})=>{
-      const color = status==='expired'?'#f43f5e': daysLeft<=7?'#f97316': daysLeft<=15?'#facc15':'#22c55e';
-      const label = status==='expired'?'❌ Expired': status==='new'?'🆕 New':`⏳ ${daysLeft} दिन`;
-      return `<div class="card" style="padding:10px 12px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="flex:1">
-            <div style="font-size:13px;font-weight:800;color:#fff">${emp.name}</div>
-            <div style="font-size:11px;color:var(--muted2)">${emp.empId} · ${SEC[emp.sec]?.hi||emp.sec}</div>
-            ${a?.loginAt?`<div style="font-size:10px;color:var(--muted)">Last: ${new Date(a.loginAt||a.approvedAt||'').toLocaleDateString('hi-IN')}</div>`:''}
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:12px;font-weight:900;color:${color}">${label}</div>
-            <div style="display:flex;gap:4px;margin-top:4px">
-              <button onclick="adminExtendUser('${emp.id}','${emp.name}',30)" style="padding:3px 7px;border-radius:5px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);color:#22c55e;font-size:10px;font-weight:700;cursor:pointer">+30d</button>
-              <button onclick="adminExtendUser('${emp.id}','${emp.name}',90)" style="padding:3px 7px;border-radius:5px;background:rgba(56,189,248,.15);border:1px solid rgba(56,189,248,.3);color:#38bdf8;font-size:10px;font-weight:700;cursor:pointer">+90d</button>
-              <button onclick="adminRevokeUser('${emp.id}','${emp.name}')" style="padding:3px 7px;border-radius:5px;background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.3);color:#f43f5e;font-size:10px;font-weight:700;cursor:pointer">Revoke</button>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    }).join('') + (items.length>20?`<div style="text-align:center;padding:10px;font-size:12px;color:var(--muted)">...और ${items.length-20} users</div>`:'');
-  }catch(e){
-    if(container) container.innerHTML += '<div style="font-size:12px;color:var(--muted);padding:10px">Error loading user data</div>';
-  }
-}
-
-async function adminExtendUser(empId, empName, days){
-  if(!confirm(`${empName} की validity ${days} दिन बढ़ाएं?`)) return;
-  const validTill = new Date(Date.now() + days*86400000).toISOString();
-  await fbUpdate('deviceApprovals/'+empId, { validTill, extendedBy:SESSION.name, extendedAt:new Date().toISOString() });
-  toast(`✅ ${empName} की validity ${days} दिन बढ़ाई गई`);
-  const umEl = document.getElementById('homeUserMgmt');
-  if(umEl) renderUserManagement(umEl, getEmps().filter(e=>e.status!=='resigned'));
-}
-
-async function adminRevokeUser(empId, empName){
-  if(!confirm(`${empName} की app access revoke करें? वो login नहीं कर पाएंगे।`)) return;
-  const expiredDate = new Date(Date.now() - 86400000).toISOString();
-  await fbUpdate('deviceApprovals/'+empId, { validTill:expiredDate, revokedBy:SESSION.name, revokedAt:new Date().toISOString() });
-  toast(`❌ ${empName} की access revoke की गई`);
-  const umEl = document.getElementById('homeUserMgmt');
-  if(umEl) renderUserManagement(umEl, getEmps().filter(e=>e.status!=='resigned'));
-}
-
 // ── DEVICE CHECK via FIREBASE ──
 async function checkDeviceApproval(empId){
   try {
@@ -3286,7 +3152,7 @@ function check45DayLogout(){
     const s = localStorage.getItem('mp_session');
     if(!s) return;
     const sess = decodeSession(s);
-    if(!sess || !sess.loginAt || sess.role==='admin' || sess.role==='manager') return;
+    if(!sess || !sess.loginAt || sess.role==='admin') return;
     
     const loginDate = new Date(sess.loginAt);
     const now = new Date();
@@ -3369,10 +3235,10 @@ const DEPT_INFO = {
 };
 
 function showStep(n){
-  ['loginStep1','loginStep2','loginStep3','adminLoginPanel','managerLoginPanel'].forEach(id=>{
+  ['loginStep1','loginStep2','loginStep3','adminLoginPanel'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
-  const map={1:'loginStep1',2:'loginStep2',3:'loginStep3','admin':'adminLoginPanel','manager':'managerLoginPanel'};
+  const map={1:'loginStep1',2:'loginStep2',3:'loginStep3','admin':'adminLoginPanel'};
   const el=document.getElementById(map[n]); if(el) el.style.display='block';
   if(n===1){ _step1Company='GLS'; }
   if(n===1||n===2){
@@ -3383,9 +3249,6 @@ function showStep(n){
 function switchTab(){}
 function backToStep1(){ showStep(1); }
 function showAdminLogin(){ showStep('admin'); setTimeout(()=>document.getElementById('aUser')?.focus(),100); }
-function showManagerLogin(){ showStep('manager'); setTimeout(()=>document.getElementById('mUser')?.focus(),100); }
-function showAdminLoginFromFp(){ hideFpScreen(); const login=document.getElementById('loginScreen'); if(login){login.classList.add('show');login.style.display='flex';} showAdminLogin(); }
-function showManagerLoginFromFp(){ hideFpScreen(); const login=document.getElementById('loginScreen'); if(login){login.classList.add('show');login.style.display='flex';} showManagerLogin(); }
 function checkGuestCompany(){}
 function selectCompany(co,el){ _step1Company=co; }
 function showCompanyPage(){}
@@ -3425,7 +3288,7 @@ function togglePass(id,btn){
 }
 
 function showLoginErrStep(step,msg){
-  const ids={1:'loginErr',2:'loginErr2',3:'loginErr2','admin':'loginErrAdmin','manager':'loginErrManager'};
+  const ids={1:'loginErr',2:'loginErr2',3:'loginErr2','admin':'loginErrAdmin'};
   const el=document.getElementById(ids[step]||'loginErr2');
   if(el){ el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),4000); }
 }
@@ -3521,95 +3384,6 @@ async function tryAdminLogin(){
   }
 }
 
-// ── MANAGER LOGIN ──
-async function tryManagerLogin(){
-  const u=(document.getElementById('mUser')?.value||'').trim().toLowerCase();
-  const p=(document.getElementById('mPass')?.value||'').trim();
-  if(!u||!p){ showLoginErrStep('manager','Username aur Password daalein'); return; }
-
-  const rl = checkRateLimit('manager');
-  if(!rl.ok){ showLoginErrStep('manager','🔒 ' + rl.msg); return; }
-
-  const btn = document.querySelector('#managerLoginPanel .big-btn');
-  if(btn){ btn.innerHTML='⏳ Login ho raha hai...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none'; }
-  const restoreBtn=()=>{ if(btn){ btn.innerHTML='🔑 Login करें'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; } };
-
-  try{
-    const passHash = await hashPass(u+':'+p+':MP_ADMIN');
-    let mgrInfo = null;
-
-    // Check Firebase adminAuth — accepts entries with role='Manager'
-    try{
-      const fbAuthData = await fbGet('adminAuth');
-      if(fbAuthData && fbAuthData[u]){
-        if(fbAuthData[u].h === passHash){
-          const storedRole = (fbAuthData[u].role||'').toLowerCase();
-          if(storedRole === 'manager' || storedRole === 'mgr'){
-            mgrInfo = {name:fbAuthData[u].name||u.toUpperCase(), role:'Manager'};
-          } else {
-            showLoginErrStep('manager','❌ यह Manager account नहीं है। Admin Login use करें।');
-            restoreBtn(); return;
-          }
-        }
-      }
-    }catch(e){ console.warn('[managerLogin] Firebase read failed:', e.message); }
-
-    // Emergency hardcoded manager fallback
-    if(!mgrInfo){
-      const emergencyMgr = [
-        { u:'vivek', h:'6e6e62f9c055e05728a73e7a79a820c819eb3ca969a534ac97625aac9207d1c6', name:'VIVEK' }
-      ];
-      const localMatch = emergencyMgr.find(c=>c.u===u&&c.h===passHash);
-      if(localMatch){
-        mgrInfo = {name:localMatch.name, role:'Manager'};
-      }
-    }
-
-    if(!mgrInfo){
-      recordFailedAttempt('manager');
-      showLoginErrStep('manager','❌ Username ya Password galat hai');
-      restoreBtn(); return;
-    }
-
-    // Firebase anonymous auth for Firebase rules
-    try{ await window._fbSignInAnon(); }catch(e){}
-
-    resetAttempts('manager');
-    SESSION = {
-      role:'manager', name:mgrInfo.name||u.toUpperCase(),
-      empId:u, empObjId:'mgr_'+u,
-      adminRole:'Manager',
-      loginAt:new Date().toISOString()
-    };
-
-    // ── DEVICE BINDING CHECK ──
-    // Check if this device is the bound device for this manager
-    try{
-      const thisDevice = getDeviceId();
-      const devData = await fbGet('managerDevices/'+u);
-      if(devData?.boundDeviceId && devData.boundDeviceId !== thisDevice){
-        // Different device — block login
-        showLoginErrStep('manager','❌ यह device आपके account से authorized नहीं है। Admin से device reset कराएं: +91-8929394920');
-        restoreBtn(); return;
-      }
-    }catch(devErr){ /* allow on Firebase error */ }
-
-    saveSession();
-    restoreBtn();
-    writeIntegrityToken();
-    localStorage.setItem('mp_int_ok','1');
-    launchApp();
-    listenAdminNotifications();
-    // Bind device after login (async — don't block login)
-    setTimeout(()=>checkAndBindManagerDevice(u), 1000);
-    setTimeout(()=>registerFingerprint(mgrInfo.name||u.toUpperCase(), 'mgr_'+u), 1500);
-  }catch(err){
-    console.error('Manager login error:',err);
-    showLoginErrStep('manager','❌ Error: '+err.message);
-    restoreBtn();
-  }
-}
-
 async function proceedFromCode(){
   const code=(document.getElementById('wCode')?.value||'').trim().toUpperCase();
   if(!code||code.length<3){ showLoginErrStep(2,'Employee Code \u0921\u093e\u0932\u0947\u0902 (\u0915\u092e \u0938\u0947 \u0915\u092e 3 characters)'); return; }
@@ -3675,39 +3449,148 @@ function showLoginApprovalOverlay(emp, existingReg){
   if(!ov){ ov=document.createElement('div'); ov.id='loginApprovalOverlay'; document.body.appendChild(ov); }
   ov.style.cssText='position:fixed;inset:0;z-index:9000;background:#0a0f1a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-y:auto';
   const secLabel=SEC[emp.sec]?.hi||emp.sec||'GLS';
+  // Step 1: Ask phone number then selfie before sending approval request
   ov.innerHTML=`
-    <div style="width:100%;max-width:360px;text-align:center">
-      <div style="font-size:52px;margin-bottom:10px">&#128241;</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;
-        background:linear-gradient(135deg,#f97316,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">
-        Login Request
+    <div style="width:100%;max-width:360px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:44px">📱</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;
+          background:linear-gradient(135deg,#f97316,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
+          Verify करें
+        </div>
+        <div style="font-size:13px;color:#94a3b8;margin-top:4px">${emp.name} · ${emp.empId}</div>
       </div>
-      <div style="background:#1e293b;border:1.5px solid rgba(249,115,22,.4);border-radius:16px;padding:18px;margin:16px 0;text-align:left">
-        <div style="font-size:11px;color:#64748b;font-weight:800;letter-spacing:1px;margin-bottom:8px">EMPLOYEE</div>
-        <div style="font-size:18px;font-weight:900;color:#f97316">${emp.name}</div>
-        <div style="font-size:13px;color:#94a3b8;margin-top:3px">${emp.empId} &middot; ${secLabel}</div>
+
+      <!-- Phone number field -->
+      <div style="background:#1e293b;border:1.5px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px">
+        <div style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:1px;margin-bottom:8px">MOBILE NUMBER *</div>
+        <input id="laPhone" type="tel" inputmode="numeric" placeholder="10 digit number" maxlength="10"
+          style="width:100%;box-sizing:border-box;background:#0f172a;border:1.5px solid #475569;
+                 border-radius:10px;padding:13px 12px;color:#fff;font-size:18px;font-weight:700;
+                 outline:none;font-family:inherit"
+          oninput="this.value=this.value.replace(/\\D/g,'').slice(0,10);_laValidate()">
       </div>
-      <div id="laStatus" style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);
-        border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#94a3b8;line-height:1.9">
-        &#9203; Admin ko notification bheji ja rahi hai...<br>
-        <span style="color:#64748b;font-size:11px">Approval ke baad automatically login hoga</span>
+
+      <!-- Selfie section -->
+      <div style="background:#1e293b;border:1.5px solid #334155;border-radius:14px;padding:16px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:1px;margin-bottom:10px">SELFIE PHOTO * (Verification के लिए)</div>
+        <div id="laSelfiePrev" style="width:100%;height:160px;border-radius:10px;background:#0f172a;border:2px dashed #334155;
+          display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;cursor:pointer"
+          onclick="document.getElementById('laSelfieInput').click()">
+          <div id="laSelfiePlaceholder" style="text-align:center;color:#475569">
+            <div style="font-size:36px;margin-bottom:6px">📸</div>
+            <div style="font-size:13px;font-weight:700">Tap to take Selfie</div>
+          </div>
+          <img id="laSelfieImg" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px">
+        </div>
+        <input id="laSelfieInput" type="file" accept="image/*" capture="user" style="display:none"
+          onchange="previewLASelfie(this)">
+        <button onclick="document.getElementById('laSelfieInput').click()"
+          style="width:100%;padding:11px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);
+                 border-radius:10px;color:#f97316;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          📷 Selfie लें / बदलें
+        </button>
       </div>
-      <div id="laSpinner" style="margin-bottom:16px">
-        <div style="width:44px;height:44px;border:3px solid rgba(249,115,22,.2);border-top-color:#f97316;
-          border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
-      </div>
-      <div style="font-size:12px;color:#64748b;margin-bottom:16px">
-        &#128222; Jaldi approval: <a href="tel:+918929394920" style="color:#f97316;font-weight:800;text-decoration:none">+91-8929394920</a>
-      </div>
+
+      <div id="laErr" style="color:#f43f5e;font-size:13px;text-align:center;min-height:18px;margin-bottom:8px"></div>
+
+      <button id="laSubmitBtn" onclick="submitLoginWithSelfie('${emp.id}','${emp.empId}','${emp.name}','${secLabel}')"
+        style="width:100%;padding:16px;background:linear-gradient(135deg,#f97316,#a855f7);
+               border:none;border-radius:13px;color:#fff;font-size:17px;font-weight:900;
+               cursor:pointer;margin-bottom:10px;opacity:.4;pointer-events:none;font-family:inherit">
+        ✅ Verify करके Login Request भेजें
+      </button>
       <button onclick="cancelLoginRequest()" style="width:100%;padding:13px;background:none;
         border:1px solid #334155;border-radius:12px;color:#64748b;font-size:14px;cursor:pointer;font-family:inherit">
-        &larr; Wapas jaayein
+        ← वापस जाएं
       </button>
     </div>`;
-  sendLoginApprovalRequest(emp, existingReg);
+  // Store emp for later use
+  window._laEmp = emp;
+  window._laExistingReg = existingReg;
 }
 
-async function sendLoginApprovalRequest(emp, existingReg){
+function previewLASelfie(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('laSelfieImg');
+    const ph  = document.getElementById('laSelfiePlaceholder');
+    if(img){ img.src=e.target.result; img.style.display='block'; }
+    if(ph)  ph.style.display='none';
+    window._laSelfieData = e.target.result;
+    _laValidate();
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function _laValidate(){
+  const phone = (document.getElementById('laPhone')?.value||'').trim();
+  const hasSelfie = !!window._laSelfieData;
+  const btn = document.getElementById('laSubmitBtn');
+  const ok = phone.length===10 && hasSelfie;
+  if(btn){ btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none'; }
+}
+
+async function submitLoginWithSelfie(empId, empCode, empName, secLabel){
+  const phone = (document.getElementById('laPhone')?.value||'').trim();
+  const errEl = document.getElementById('laErr');
+  if(phone.length!==10){ if(errEl) errEl.textContent='❌ 10 digit mobile number डालें'; return; }
+  if(!window._laSelfieData){ if(errEl) errEl.textContent='❌ Selfie लें'; return; }
+  const btn = document.getElementById('laSubmitBtn');
+  if(btn){ btn.innerHTML='⏳ Upload हो रहा है...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none'; }
+  if(errEl) errEl.textContent='';
+  try{
+    // Upload selfie to Firebase Storage
+    let selfieUrl = null;
+    try{
+      const path = 'selfies/login/' + empId + '_' + Date.now() + '.jpg';
+      selfieUrl = await window._fbUploadSelfie(window._laSelfieData, path);
+    }catch(e){ console.warn('[selfie upload]', e.message); }
+
+    // Now proceed with approval overlay
+    const ov = document.getElementById('loginApprovalOverlay');
+    if(ov) ov.innerHTML=`
+      <div style="width:100%;max-width:360px;text-align:center">
+        <div style="font-size:52px;margin-bottom:10px">&#128241;</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;
+          background:linear-gradient(135deg,#f97316,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px">
+          Login Request
+        </div>
+        <div style="background:#1e293b;border:1.5px solid rgba(249,115,22,.4);border-radius:16px;padding:18px;margin:16px 0;text-align:left">
+          <div style="font-size:11px;color:#64748b;font-weight:800;letter-spacing:1px;margin-bottom:8px">EMPLOYEE</div>
+          <div style="font-size:18px;font-weight:900;color:#f97316">${empName}</div>
+          <div style="font-size:13px;color:#94a3b8;margin-top:3px">${empCode} &middot; ${secLabel}</div>
+          ${selfieUrl?`<div style="margin-top:10px"><img src="${selfieUrl}" style="width:70px;height:70px;border-radius:10px;object-fit:cover;border:2px solid rgba(249,115,22,.4)"></div>`:''}
+        </div>
+        <div id="laStatus" style="background:rgba(249,115,22,.08);border:1px solid rgba(249,115,22,.2);
+          border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:#94a3b8;line-height:1.9">
+          &#9203; Admin को notification भेजी जा रही है...<br>
+          <span style="color:#64748b;font-size:11px">Approval के बाद automatically login होगा</span>
+        </div>
+        <div id="laSpinner" style="margin-bottom:16px">
+          <div style="width:44px;height:44px;border:3px solid rgba(249,115,22,.2);border-top-color:#f97316;
+            border-radius:50%;animation:spin 1s linear infinite;margin:0 auto"></div>
+        </div>
+        <div style="font-size:12px;color:#64748b;margin-bottom:16px">
+          &#128222; Jaldi approval: <a href="tel:+918929394920" style="color:#f97316;font-weight:800;text-decoration:none">+91-8929394920</a>
+        </div>
+        <button onclick="cancelLoginRequest()" style="width:100%;padding:13px;background:none;
+          border:1px solid #334155;border-radius:12px;color:#64748b;font-size:14px;cursor:pointer;font-family:inherit">
+          &larr; Wapas jaayein
+        </button>
+      </div>`;
+
+    // Store selfie URL on emp object for admin to see
+    window._laSelfieUrl = selfieUrl;
+    sendLoginApprovalRequest(window._laEmp, window._laExistingReg, phone, selfieUrl);
+  }catch(e){
+    if(errEl) errEl.textContent='❌ Error: '+e.message;
+    if(btn){ btn.innerHTML='✅ Verify करके Login Request भेजें'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; }
+  }
+}
+
+async function sendLoginApprovalRequest(emp, existingReg, phone, selfieUrl){
   const deviceId=getDeviceId();
   const statusEl=document.getElementById('laStatus');
   try{
@@ -3722,7 +3605,8 @@ async function sendLoginApprovalRequest(emp, existingReg){
     const reqKey=await fbPush('loginRequests',{
       empId:emp.empId, empObjId:emp.id, empName:emp.name, empSec:emp.sec||'MET',
       deviceId, status:'pending', requestedAt:new Date().toISOString(),
-      isNewReg:existingReg?true:false
+      isNewReg:existingReg?true:false,
+      phone:phone||'', selfieUrl:selfieUrl||''
     });
     await fbUpdate('loginRequests/'+reqKey,{_key:reqKey});
     _loginApprovalKey=reqKey;
@@ -3812,14 +3696,19 @@ function showNewEmpRegistrationForm(code){
           Employee Code: <b style="color:#f97316">${code}</b>
         </div>
       </div>
+
+      <!-- Mobile Number -->
       <div style="background:#1e293b;border:1.5px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px">
-        <div style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:1px;margin-bottom:8px">FULL NAME *</div>
-        <input id="nrName" type="text" autocomplete="name" placeholder="e.g. RAHUL KUMAR"
+        <div style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:1px;margin-bottom:8px">MOBILE NUMBER *</div>
+        <input id="nrPhone" type="tel" inputmode="numeric" placeholder="10 digit number" maxlength="10"
           style="width:100%;box-sizing:border-box;background:#0f172a;border:1.5px solid #475569;
-                 border-radius:10px;padding:13px 12px;color:#fff;font-size:16px;font-weight:700;
-                 text-transform:uppercase;outline:none;font-family:inherit"
-          oninput="this.value=this.value.toUpperCase();_nrValidate()">
+                 border-radius:10px;padding:13px 12px;color:#fff;font-size:18px;font-weight:700;
+                 outline:none;font-family:inherit"
+          oninput="this.value=this.value.replace(/\\D/g,'').slice(0,10);_nrValidate()">
+        <div style="font-size:11px;color:#475569;margin-top:5px">Admin approval के लिए जरूरी</div>
       </div>
+
+      <!-- Department -->
       <div style="background:#1e293b;border:1.5px solid #334155;border-radius:14px;padding:16px;margin-bottom:12px;position:relative">
         <div style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:1px;margin-bottom:8px">DEPARTMENT *</div>
         <select id="nrDept" onchange="_nrValidate()"
@@ -3834,15 +3723,29 @@ function showNewEmpRegistrationForm(code){
         </select>
         <div style="pointer-events:none;position:absolute;right:28px;bottom:20px;color:#f97316;font-size:14px">&#9660;</div>
       </div>
+
+      <!-- Selfie -->
       <div style="background:#1e293b;border:1.5px solid #334155;border-radius:14px;padding:16px;margin-bottom:14px">
-        <div style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:1px;margin-bottom:8px">MOBILE NUMBER *</div>
-        <input id="nrPhone" type="tel" inputmode="numeric" placeholder="10 digit number" maxlength="10"
-          style="width:100%;box-sizing:border-box;background:#0f172a;border:1.5px solid #475569;
-                 border-radius:10px;padding:13px 12px;color:#fff;font-size:16px;font-weight:700;
-                 outline:none;font-family:inherit"
-          oninput="this.value=this.value.replace(/\D/g,'').slice(0,10);_nrValidate()">
-        <div style="font-size:11px;color:#475569;margin-top:5px">Required for password reset</div>
+        <div style="font-size:11px;font-weight:800;color:#64748b;letter-spacing:1px;margin-bottom:10px">SELFIE PHOTO * (Admin verification के लिए)</div>
+        <div id="nrSelfiePrev" style="width:100%;height:150px;border-radius:10px;background:#0f172a;
+          border:2px dashed #334155;display:flex;align-items:center;justify-content:center;
+          margin-bottom:10px;overflow:hidden;cursor:pointer"
+          onclick="document.getElementById('nrSelfieInput').click()">
+          <div id="nrSelfiePlaceholder" style="text-align:center;color:#475569">
+            <div style="font-size:36px;margin-bottom:6px">📸</div>
+            <div style="font-size:13px;font-weight:700">Tap to take Selfie</div>
+          </div>
+          <img id="nrSelfieImg" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px">
+        </div>
+        <input id="nrSelfieInput" type="file" accept="image/*" capture="user" style="display:none"
+          onchange="previewNRSelfie(this)">
+        <button onclick="document.getElementById('nrSelfieInput').click()"
+          style="width:100%;padding:11px;background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.3);
+                 border-radius:10px;color:#f97316;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+          📷 Selfie लें / बदलें
+        </button>
       </div>
+
       <div id="nrErr" style="color:#f43f5e;font-size:13px;text-align:center;min-height:18px;margin-bottom:8px"></div>
       <div style="background:rgba(249,115,22,.07);border:1px solid rgba(249,115,22,.2);border-radius:10px;
         padding:10px 14px;margin-bottom:14px;font-size:12px;color:#94a3b8;line-height:1.8;text-align:center">
@@ -3853,7 +3756,7 @@ function showNewEmpRegistrationForm(code){
         style="width:100%;padding:16px;background:linear-gradient(135deg,#f97316,#a855f7);
                border:none;border-radius:13px;color:#fff;font-size:17px;font-weight:900;
                cursor:pointer;margin-bottom:10px;opacity:.4;pointer-events:none;font-family:inherit">
-        &#128203; Request भेजें &rarr; Admin को जाएगी
+        &#128203; Request भेजें &rarr; WhatsApp से Admin को जाएगी
       </button>
       <button onclick="document.getElementById('newRegOverlay').style.display='none';showStep(2);"
         style="width:100%;padding:13px;background:none;border:1px solid #334155;
@@ -3861,15 +3764,30 @@ function showNewEmpRegistrationForm(code){
         &larr; Back
       </button>
     </div>`;
-  setTimeout(()=>document.getElementById('nrName')?.focus(),200);
+  window._nrSelfieData = null;
+  setTimeout(()=>document.getElementById('nrPhone')?.focus(),200);
+}
+
+function previewNRSelfie(input){
+  if(!input.files||!input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('nrSelfieImg');
+    const ph  = document.getElementById('nrSelfiePlaceholder');
+    if(img){ img.src=e.target.result; img.style.display='block'; }
+    if(ph)  ph.style.display='none';
+    window._nrSelfieData = e.target.result;
+    _nrValidate();
+  };
+  reader.readAsDataURL(input.files[0]);
 }
 
 function _nrValidate(){
-  const name=(document.getElementById('nrName')?.value||'').trim();
   const dept=(document.getElementById('nrDept')?.value||'').trim();
   const phone=(document.getElementById('nrPhone')?.value||'').trim();
+  const hasSelfie = !!window._nrSelfieData;
   const btn=document.getElementById('nrBtn');
-  const ok=name.length>=2&&dept&&phone.length===10;
+  const ok=dept&&phone.length===10&&hasSelfie;
   if(btn){ btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none'; }
 }
 
@@ -3888,43 +3806,67 @@ async function _sendOtpSms(){}
 async function submitNewEmpReg(code){
   // ── Sign in anonymously so Firebase writes work ──
   try{ await window._fbSignInAnon(); }catch(e){}
-  const name    = (document.getElementById('nrName')?.value||'').trim().toUpperCase();
   const dept    = (document.getElementById('nrDept')?.value||'MET').trim();
   const phone   = (document.getElementById('nrPhone')?.value||'').trim();
   let deviceId;
   try{ deviceId = (typeof getDeviceId==='function') ? getDeviceId() : null; }catch(e){}
   if(!deviceId) deviceId = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
   const errEl = document.getElementById('nrErr');
-  if(!name || name.length < 2){
-    if(errEl) errEl.textContent = '❌ नाम डालें (कम से कम 2 letters)'; return;
-  }
   if(!dept){
     if(errEl) errEl.textContent = '❌ Department चुनें'; return;
   }
   if(!phone || phone.length < 10){
     if(errEl) errEl.textContent = '❌ 10 digit mobile number डालें'; return;
   }
+  if(!window._nrSelfieData){
+    if(errEl) errEl.textContent = '❌ Selfie लें'; return;
+  }
   const btn = document.getElementById('nrBtn');
-  if(btn){ btn.innerHTML='⏳ भेज रहे हैं...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none'; }
+  if(btn){ btn.innerHTML='⏳ Upload हो रहा है...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none'; }
   if(errEl) errEl.textContent = '';
   try{
+    // Upload selfie to Firebase Storage
+    let selfieUrl = null;
+    try{
+      const path = 'selfies/registrations/' + code + '_' + Date.now() + '.jpg';
+      selfieUrl = await window._fbUploadSelfie(window._nrSelfieData, path);
+    }catch(e){ console.warn('[selfie upload]', e.message); }
+
     const passHash = await hashPass(code+':MP_USR');
     const key = await fbPush('regRequests',{
-      empId:code, name, sec:dept, dept:dept,
+      empId:code, name:code, sec:dept, dept:dept,
       phone:phone, company:'GLS', status:'pending',
       deviceId:deviceId, passHash:passHash,
+      selfieUrl: selfieUrl||'',
       requestedAt:new Date().toISOString()
     });
     await fbUpdate('regRequests/'+key,{_key:key});
-    try{ await notifyAdmin('🆕 नया Registration', name+' ('+code+') ने request भेजी'); }catch(e){}
+    try{ await notifyAdmin('🆕 नया Registration', code+' ('+dept+') ने request भेजी'); }catch(e){}
+
+    // ── Send WhatsApp message to admin from user's WhatsApp ──
+    const appUrl = window.location.href.split('?')[0];
+    const waMsg = encodeURIComponent(
+      `🆕 *New Registration Request*\n\n` +
+      `👤 Employee Code: *${code}*\n` +
+      `📱 Mobile: *${phone}*\n` +
+      `🏭 Department: *${dept}*\n` +
+      `📸 Selfie: ${selfieUrl||'(uploading)'}\n\n` +
+      `✅ Approve karne ke liye app open karein:\n${appUrl}\n\n` +
+      `_Pending tab → New Registrations mein milega_`
+    );
+    // Open WhatsApp from user's phone to admin number
+    setTimeout(()=>{
+      window.open('https://wa.me/918929394920?text='+waMsg, '_blank');
+    }, 500);
+
     // Hide overlay, show pending
     const ov = document.getElementById('newRegOverlay');
     if(ov) ov.style.display='none';
     document.getElementById('pendingBox')?.classList.add('show');
-    toast('✅ Request Admin को भेज दी! Approval का इंतजार करें।');
+    toast('✅ Request Admin को WhatsApp से भेज दी! Approval का इंतजार करें।');
   }catch(e){
     if(errEl) errEl.textContent = '❌ Error: '+e.message;
-    if(btn){ btn.innerHTML='📋 Request भेजें → Admin को जाएगी'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; }
+    if(btn){ btn.innerHTML='📋 Request भेजें → WhatsApp से Admin को जाएगी'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; }
   }
 }
 
@@ -4060,7 +4002,6 @@ async function launchApp(){
 
   const rt=document.getElementById('roleTag');
   if(isAdmin()){ rt.textContent='🛡️ ADMIN'; rt.className='role-tag admin'; }
-  else if(isManager()){ rt.textContent='👔 MANAGER'; rt.className='role-tag'; rt.style.cssText='background:rgba(34,197,94,.15);color:#22c55e;border-radius:4px;padding:2px 7px;font-size:9px;font-weight:700;font-family:Barlow Condensed,sans-serif'; }
   else if(isGuest()){ 
     const co = SESSION.company||'GUEST';
     rt.textContent = co !== 'GLS' ? '🏢 '+co : '👤 GUEST'; 
@@ -4076,16 +4017,12 @@ async function launchApp(){
       Notification.requestPermission().catch(()=>{});
     }
   }
-  if(isManager()){
-    document.getElementById('notifBtn').style.display='flex';
-    setTimeout(listenAdminNotifications, 800);
-  }
   // ── Show notification bell for ALL logged-in users ──
   if(!isGuest()){
     document.getElementById('notifBtn').style.display='flex';
     setTimeout(listenUserShiftNotifications, 1000);
   }
-  if(isAdmin() || isManager()) document.getElementById('printBtn').style.display='flex';
+  if(isAdmin()) document.getElementById('printBtn').style.display='flex';
   // Imp Info button — admin and manager
   const iiBtn = document.getElementById('impInfoBtn');
   if(iiBtn) iiBtn.style.display = isAdminOrMgr() ? 'block' : 'none';
@@ -4111,8 +4048,8 @@ async function launchApp(){
   setTimeout(()=>{ renderAll(); }, 3500);
 
   // Check 45-day expiry for workers (async Firebase check)
-  // Skip for admin, manager, guest, and MGR role (VIVEK) — they never expire
-  if(!isAdmin() && !isManager() && !isGuest() && !isMgr()){
+  // Skip for admin, guest, and MGR role (VIVEK) — they never expire
+  if(!isAdmin() && !isGuest() && !isMgr()){
     checkUserExpiry().then(expiry => {
       if(!expiry.valid){
         showHardExpiry();
@@ -4135,13 +4072,13 @@ async function launchApp(){
 async function buildNav(){
   // ── ALL POSSIBLE TABS (master list) ──
   const ALL_TABS = [
-    {id:'home',      ico:'🏠', lbl:'होम',       roles:['admin','manager','worker','guest']},
-    {id:'schedule',  ico:'📅', lbl:'शेड्यूल',   roles:['admin','manager','worker']},
-    {id:'leave',     ico:'🏖️', lbl:'अवकाश',    roles:['admin','manager','worker']},
-    {id:'reports',   ico:'📋', lbl:'रिपोर्ट',   roles:['admin','manager','worker']},
-    {id:'todo',      ico:'✅', lbl:'To-Do',      roles:['admin','manager','guest','worker']},
-    {id:'pending',   ico:'⏳', lbl:'पेंडिंग',   roles:['admin','manager']},
-    {id:'team',      ico:'👥', lbl:'टीम',        roles:['admin','manager']},
+    {id:'home',      ico:'🏠', lbl:'होम',       roles:['admin','worker','guest']},
+    {id:'schedule',  ico:'📅', lbl:'शेड्यूल',   roles:['admin','worker']},
+    {id:'leave',     ico:'🏖️', lbl:'अवकाश',    roles:['admin','worker']},
+    {id:'reports',   ico:'📋', lbl:'रिपोर्ट',   roles:['admin','worker']},
+    {id:'todo',      ico:'✅', lbl:'To-Do',      roles:['admin','guest','worker']},
+    {id:'pending',   ico:'⏳', lbl:'पेंडिंग',   roles:['admin']},
+    {id:'team',      ico:'👥', lbl:'टीम',        roles:['admin']},
   ];
 
   // ── DYNAMIC GUEST TAB VISIBILITY (admin-controlled via Firebase) ──
@@ -4151,12 +4088,10 @@ async function buildNav(){
     if(gv) guestVisibility = gv;
   } catch(e){}
 
-  const role = isAdmin() ? 'admin' : isManager() ? 'manager' : isGuest() ? 'guest' : 'worker';
+  const role = isAdmin() ? 'admin' : isGuest() ? 'guest' : 'worker';
   let tabs;
   if(role === 'admin'){
     tabs = ALL_TABS.filter(t => t.roles.includes('admin'));
-  } else if(role === 'manager'){
-    tabs = ALL_TABS.filter(t => t.roles.includes('manager'));
   } else if(role === 'worker'){
     tabs = ALL_TABS.filter(t => t.roles.includes('worker'));
   } else {
@@ -4276,30 +4211,13 @@ function showProfile(){
       <div style="font-size:44px;margin-bottom:8px">🛡️</div>
       <div style="font-size:18px;font-weight:900;color:#fff">${SESSION.name}</div>
       <div style="font-size:12px;color:var(--muted2);margin-top:4px">Admin — Full Access</div>
-      <div class="stitle" style="margin-top:16px;text-align:left">⚡ Quick Actions</div>
-      <button class="big-btn blue" onclick="closeModal();goTab('pending')" style="margin-bottom:8px">⏳ Pending Approvals</button>
+      <div class="stitle" style="margin-top:16px">Quick Actions</div>
+      <button class="big-btn blue" onclick="closeModal();goTab('pending')" style="margin-bottom:8px">⏳ Pending Approvals देखें</button>
       <button class="big-btn" onclick="closeModal();openExtendAccessModal()" style="margin-bottom:8px;background:linear-gradient(135deg,#a855f7,#7c3aed)">⏳ User Access Extend करें</button>
-      <button class="big-btn" onclick="closeModal();openManagerManagement()" style="margin-bottom:8px;background:linear-gradient(135deg,#22c55e,#15803d)">👔 Manager Management</button>
-      <button class="big-btn" onclick="closeModal();openChangePassword('admin')" style="margin-bottom:8px;background:linear-gradient(135deg,#f97316,#ea580c)">🔑 Password Change करें</button>
       <button class="big-btn" onclick="closeModal();openTabVisibilitySettings()" style="margin-bottom:8px;background:linear-gradient(135deg,#0e7490,#0369a1)">🔭 Tab Visibility Settings</button>
+      <button class="big-btn" onclick="closeModal();openSecuritySettings()" style="margin-bottom:8px;background:linear-gradient(135deg,#15803d,#166534)">🔐 Security Status</button>
       <button class="big-btn red" style="margin-top:4px" onclick="doLogout()">🚪 Logout</button>
     </div>`);
-  } else if(isManager()){
-    openModal(`<div class="modal-handle"></div>
-    <div style="text-align:center;padding:10px 0">
-      <div style="font-size:44px;margin-bottom:8px">👔</div>
-      <div style="font-size:18px;font-weight:900;color:#fff">${SESSION.name}</div>
-      <div style="font-size:12px;color:var(--muted2);margin-top:4px">Manager — Operations Access</div>
-      <div id="mgrDeviceStatus" style="margin:10px 0;text-align:center">
-        <span style="font-size:12px;color:var(--muted)">Device checking...</span>
-      </div>
-      <div class="stitle" style="margin-top:8px;text-align:left">⚡ Quick Actions</div>
-      <button class="big-btn" onclick="closeModal();goTab('pending')" style="margin-bottom:8px;background:linear-gradient(135deg,#22c55e,#15803d)">⏳ Pending Approvals</button>
-      <button class="big-btn" onclick="closeModal();openChangePassword('manager')" style="margin-bottom:8px;background:linear-gradient(135deg,#f97316,#ea580c)">🔑 Password Change करें</button>
-      <button class="big-btn red" style="margin-top:4px" onclick="doLogout()">🚪 Logout</button>
-    </div>`);
-    // Load device binding status for manager
-    setTimeout(()=>loadMgrDeviceStatus(), 300);
   } else if(isGuest()){
     openModal(`<div class="modal-handle"></div>
     <div style="text-align:center;padding:10px 0">
@@ -4359,270 +4277,8 @@ async function doExtendAccess(){
 }
 
 // ════════════════════════════════════════
-// 🔑 CHANGE PASSWORD (Admin / Manager)
+// TABS
 // ════════════════════════════════════════
-function openChangePassword(userType){
-  openModal(`<div class="modal-handle"></div>
-  <div class="modal-title">🔑 Password Change करें</div>
-  <div style="font-size:12px;color:var(--muted2);margin-bottom:14px;text-align:center">
-    ${userType==='admin'?'🛡️ Admin':'👔 Manager'} Password · ${SESSION.name}
-  </div>
-  <div class="field">
-    <label class="inp-label">पुराना Password</label>
-    <div style="position:relative">
-      <input class="inp-field" type="password" id="cp_old" placeholder="Current password"
-        onkeydown="if(event.key==='Enter')document.getElementById('cp_new').focus()">
-      <button onclick="togglePass('cp_old',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer">👁</button>
-    </div>
-  </div>
-  <div class="field">
-    <label class="inp-label">नया Password</label>
-    <div style="position:relative">
-      <input class="inp-field" type="password" id="cp_new" placeholder="New password (min 8 chars)"
-        oninput="checkPassStrengthUI(this.value)"
-        onkeydown="if(event.key==='Enter')document.getElementById('cp_confirm').focus()">
-      <button onclick="togglePass('cp_new',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer">👁</button>
-    </div>
-    <div class="pass-strength strength-0" id="cp_strength_bar" style="width:0%"></div>
-    <div class="pass-strength-lbl" id="cp_strength_lbl" style="color:var(--muted)"></div>
-  </div>
-  <div class="field">
-    <label class="inp-label">नया Password Confirm करें</label>
-    <div style="position:relative">
-      <input class="inp-field" type="password" id="cp_confirm" placeholder="Repeat new password"
-        onkeydown="if(event.key==='Enter')doChangePassword('${userType}')">
-      <button onclick="togglePass('cp_confirm',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer">👁</button>
-    </div>
-  </div>
-  <div class="err-msg" id="cp_err" style="margin-bottom:8px"></div>
-  <button class="submit-btn" id="cp_btn" onclick="doChangePassword('${userType}')">🔐 Password बदलें</button>
-  <button class="cancel-btn" onclick="closeModal()">रद्द करें</button>`);
-}
-
-function checkPassStrengthUI(val){
-  const bar=document.getElementById('cp_strength_bar');
-  const lbl=document.getElementById('cp_strength_lbl');
-  if(!bar||!lbl) return;
-  let score=0, feedback='';
-  if(val.length>=8) score++;
-  if(val.length>=12) score++;
-  if(/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
-  if(/[0-9]/.test(val)) score++;
-  if(/[^A-Za-z0-9]/.test(val)) score++;
-  score = Math.min(4, Math.ceil(score*4/5));
-  const levels=['','कमज़ोर','ठीक है','अच्छा','बहुत मज़बूत 💪'];
-  const colors=['','#f43f5e','#f97316','#facc15','#22c55e'];
-  const widths=['0%','25%','50%','75%','100%'];
-  bar.style.width=widths[score]; bar.style.background=colors[score]||'var(--border2)';
-  lbl.textContent=levels[score]||''; lbl.style.color=colors[score]||'var(--muted)';
-}
-
-async function doChangePassword(userType){
-  const oldP=(document.getElementById('cp_old')?.value||'').trim();
-  const newP=(document.getElementById('cp_new')?.value||'').trim();
-  const conf=(document.getElementById('cp_confirm')?.value||'').trim();
-  const errEl=document.getElementById('cp_err');
-  const showErr=(m)=>{ if(errEl){errEl.textContent=m; errEl.classList.add('show');} };
-
-  if(!oldP||!newP||!conf){ showErr('सभी fields भरें'); return; }
-  if(newP.length<8){ showErr('नया password कम से कम 8 characters का होना चाहिए'); return; }
-  if(newP!==conf){ showErr('नया password और confirm password match नहीं कर रहे'); return; }
-  if(newP===oldP){ showErr('नया password पुराने से अलग होना चाहिए'); return; }
-
-  const btn=document.getElementById('cp_btn');
-  if(btn){btn.textContent='⏳ बदल रहे हैं...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none';}
-  const restore=()=>{if(btn){btn.textContent='🔐 Password बदलें'; btn.style.opacity='1'; btn.style.pointerEvents='auto';}};
-
-  try{
-    const u = SESSION.empId;
-    const oldHash = await hashPass(u+':'+oldP+':MP_ADMIN');
-    const newHash = await hashPass(u+':'+newP+':MP_ADMIN');
-
-    // Verify old password against Firebase
-    const fbAuthData = await fbGet('adminAuth');
-    const entry = fbAuthData?.[u];
-    if(!entry || entry.h !== oldHash){
-      showErr('❌ पुराना Password गलत है'); restore(); return;
-    }
-
-    // Save new hash to Firebase
-    await fbUpdate('adminAuth/'+u, { h:newHash, updatedAt:new Date().toISOString(), updatedBy:SESSION.name });
-    closeModal();
-    toast('✅ Password सफलतापूर्वक बदल गया!');
-  }catch(err){
-    showErr('❌ Error: '+err.message); restore();
-  }
-}
-
-// ════════════════════════════════════════
-// 👔 MANAGER MANAGEMENT (Admin only)
-// ════════════════════════════════════════
-async function openManagerManagement(){
-  openModal(`<div class="modal-handle"></div>
-  <div class="modal-title">👔 Manager Management</div>
-  <div id="mgrMgmtContent" style="min-height:80px;display:flex;align-items:center;justify-content:center">
-    <div style="color:var(--muted2);font-size:13px">⏳ लोड हो रहा है...</div>
-  </div>`);
-  await renderManagerList();
-}
-
-async function renderManagerList(){
-  const el=document.getElementById('mgrMgmtContent');
-  if(!el) return;
-  try{
-    const authData = await fbGet('adminAuth');
-    const mgrs = authData ? Object.entries(authData).filter(([u,v])=>(v.role||'').toLowerCase()==='manager') : [];
-    const devicesData = await fbGet('managerDevices');
-
-    el.innerHTML = `
-    <div style="width:100%">
-      ${mgrs.length ? `<div class="stitle" style="margin-bottom:8px">मौजूदा Managers (${mgrs.length})</div>
-        ${mgrs.map(([u,v])=>{
-          const devInfo = devicesData?.[u];
-          const bound = devInfo?.boundDeviceId;
-          const lastLogin = devInfo?.lastLoginAt ? new Date(devInfo.lastLoginAt).toLocaleDateString('hi-IN') : 'कभी नहीं';
-          return `<div class="mgr-chip">
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:800;color:#fff">${v.name||u.toUpperCase()}</div>
-              <div style="font-size:11px;color:var(--muted2)">@${u} · Last login: ${lastLogin}</div>
-              <div style="margin-top:4px">
-                ${bound
-                  ? `<span class="sec-badge bound">📱 Device Bound</span>`
-                  : `<span class="sec-badge unbound">⚠️ No Device Bound</span>`}
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:4px">
-              <button onclick="adminResetMgrDevice('${u}','${v.name||u}')" 
-                style="padding:4px 8px;border-radius:6px;background:rgba(249,115,22,.15);border:1px solid rgba(249,115,22,.3);color:#f97316;font-size:10px;font-weight:700;cursor:pointer">
-                📱 Reset Device
-              </button>
-              <button onclick="adminRemoveManager('${u}','${v.name||u}')"
-                style="padding:4px 8px;border-radius:6px;background:rgba(244,63,94,.12);border:1px solid rgba(244,63,94,.3);color:#f43f5e;font-size:10px;font-weight:700;cursor:pointer">
-                🗑️ Remove
-              </button>
-            </div>
-          </div>`;
-        }).join('')}` : `<div class="empty" style="padding:16px"><div class="empty-text">कोई Manager नहीं बनाया गया</div></div>`}
-      
-      <div class="stitle" style="margin:14px 0 8px">➕ नया Manager बनाएं</div>
-      <div class="field">
-        <label class="inp-label">Username (Login ID)</label>
-        <input class="inp-field" type="text" id="nm_user" placeholder="जैसे: ramesh" autocomplete="off"
-          oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')">
-      </div>
-      <div class="field">
-        <label class="inp-label">Display Name</label>
-        <input class="inp-field" type="text" id="nm_name" placeholder="जैसे: RAMESH KUMAR">
-      </div>
-      <div class="field">
-        <label class="inp-label">Password सेट करें</label>
-        <div style="position:relative">
-          <input class="inp-field" type="password" id="nm_pass" placeholder="कम से कम 8 characters"
-            oninput="checkPassStrengthUI(this.value)">
-          <button onclick="togglePass('nm_pass',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer">👁</button>
-        </div>
-        <div class="pass-strength strength-0" id="cp_strength_bar" style="width:0%"></div>
-        <div class="pass-strength-lbl" id="cp_strength_lbl"></div>
-      </div>
-      <div class="err-msg" id="nm_err" style="margin-bottom:8px"></div>
-      <button class="submit-btn" onclick="doAddManager()">👔 Manager बनाएं</button>
-    </div>`;
-  }catch(e){
-    if(el) el.innerHTML=`<div style="color:var(--lv);font-size:13px">Error: ${e.message}</div>`;
-  }
-}
-
-async function doAddManager(){
-  const u=(document.getElementById('nm_user')?.value||'').trim().toLowerCase();
-  const n=(document.getElementById('nm_name')?.value||'').trim().toUpperCase();
-  const p=(document.getElementById('nm_pass')?.value||'').trim();
-  const errEl=document.getElementById('nm_err');
-  const showErr=(m)=>{if(errEl){errEl.textContent=m; errEl.classList.add('show');}};
-
-  if(!u||!n||!p){showErr('सभी fields भरें'); return;}
-  if(u.length<3){showErr('Username कम से कम 3 characters का होना चाहिए'); return;}
-  if(p.length<8){showErr('Password कम से कम 8 characters का होना चाहिए'); return;}
-
-  try{
-    const authData = await fbGet('adminAuth');
-    if(authData?.[u]){showErr('❌ यह username पहले से exist करता है'); return;}
-
-    const hash = await hashPass(u+':'+p+':MP_ADMIN');
-    await fbUpdate('adminAuth/'+u, { h:hash, name:n, role:'Manager', createdBy:SESSION.name, createdAt:new Date().toISOString() });
-    toast(`✅ Manager ${n} (@${u}) बना दिया गया!`);
-    await renderManagerList();
-  }catch(e){
-    showErr('❌ Error: '+e.message);
-  }
-}
-
-async function adminResetMgrDevice(username, name){
-  if(!confirm(`${name} (@${username}) का device binding reset करें?\nवो अगली बार login करने पर नया device bind होगा।`)) return;
-  await fbUpdate('managerDevices/'+username, { boundDeviceId:null, resetBy:SESSION.name, resetAt:new Date().toISOString() });
-  toast(`✅ ${name} का device reset हो गया`);
-  await renderManagerList();
-}
-
-async function adminRemoveManager(username, name){
-  if(!confirm(`${name} (@${username}) को Manager से हटाएं? वो Manager Login नहीं कर पाएंगे।`)) return;
-  await fbUpdate('adminAuth/'+username, { role:'Removed', removedBy:SESSION.name, removedAt:new Date().toISOString() });
-  toast(`❌ ${name} की Manager access हटाई गई`);
-  await renderManagerList();
-}
-
-// ════════════════════════════════════════
-// 📱 MANAGER DEVICE BINDING (Security)
-// ════════════════════════════════════════
-async function loadMgrDeviceStatus(){
-  const el=document.getElementById('mgrDeviceStatus');
-  if(!el) return;
-  try{
-    const u=SESSION.empId;
-    const devData = await fbGet('managerDevices/'+u);
-    const thisDevice = getDeviceId();
-    if(!devData?.boundDeviceId){
-      el.innerHTML=`<span class="sec-badge unbound">⚠️ Device अभी Bind नहीं है — यह device auto-bind होगा</span>`;
-    } else if(devData.boundDeviceId===thisDevice){
-      el.innerHTML=`<span class="sec-badge bound">📱 यह device Verified है ✅</span>`;
-    } else {
-      el.innerHTML=`<span class="sec-badge" style="background:rgba(244,63,94,.15);color:#f43f5e;border:1px solid rgba(244,63,94,.3)">❌ Unknown Device — Admin से contact करें</span>`;
-    }
-  }catch(e){ if(el) el.innerHTML=''; }
-}
-
-// Called during manager login to enforce device binding
-async function checkAndBindManagerDevice(username){
-  try{
-    const thisDevice = getDeviceId();
-    const devData = await fbGet('managerDevices/'+username);
-
-    if(!devData?.boundDeviceId){
-      // First login — bind this device
-      await fbUpdate('managerDevices/'+username, {
-        boundDeviceId: thisDevice,
-        boundAt: new Date().toISOString(),
-        boundByName: SESSION.name,
-        lastLoginAt: new Date().toISOString(),
-        lastDeviceUA: navigator.userAgent?.substring(0,120)||'unknown'
-      });
-      toast('📱 यह device आपके Manager account से bind हो गया!');
-      return true;
-    }
-
-    if(devData.boundDeviceId === thisDevice){
-      // Same device — update last login time
-      await fbUpdate('managerDevices/'+username, {
-        lastLoginAt: new Date().toISOString()
-      });
-      return true;
-    }
-
-    // Different device — block login
-    return false;
-  }catch(e){
-    return true; // Allow on error (don't lock out due to Firebase failure)
-  }
-}
 let _currentTab='home';
 function goTab(t){
   // Warn if leaving schedule tab with unsaved changes
@@ -4783,8 +4439,8 @@ function renderHome(){
   document.getElementById('homeDateLbl').textContent =
     TODAY_DATE.toLocaleDateString('hi-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
-  if(isAdmin() || isManager()){
-    // ── ADMIN/MANAGER: full team overview ──
+  if(isAdmin()){
+    // ── ADMIN: full team overview ──
     document.getElementById('homeAdminView').style.display='block';
     document.getElementById('homeWorkerView').style.display='none';
     document.getElementById('homeNotice').innerHTML='';
@@ -4833,12 +4489,6 @@ function renderHome(){
         </div>
       </div>`;
     }).join('') + `<div onclick="goTab('schedule')" style="text-align:center;padding:12px;font-size:13px;color:var(--muted);cursor:pointer">पूरा शेड्यूल देखें →</div>`;
-
-    // Admin-only: User Management
-    if(isAdmin()){
-      const umEl = document.getElementById('homeUserMgmt');
-      if(umEl){ umEl.style.display='block'; renderUserManagement(umEl, emps); }
-    }
 
   } else {
     // ── WORKER: personal shift calendar ──
@@ -6394,7 +6044,7 @@ function _buildNcrCards(){
 function renderReports(){
   // Merge Firebase reports + hardcoded NCR_DATA
   let fbList = getReports();
-  if(!isAdmin() && !isManager()) fbList = fbList.filter(r=>r.status==='approved'||r.reportedById===SESSION.empObjId);
+  if(!isAdmin()) fbList = fbList.filter(r=>r.status==='approved'||r.reportedById===SESSION.empObjId);
 
   // Build legacy NCR cards (always visible to everyone)
   const legacyNcrs = _buildNcrCards();
@@ -6460,9 +6110,9 @@ function renderReports(){
           </div>` : ''}
         </div>
       </div>
-      ${(isAdmin()||isManager())&&!isLegacy&&r.status==='pending'?`<div class="action-row">
-        <button class="act-btn approve" onclick="actReport('${r._key}','approved')">✅ Publish करें</button>
-        <button class="act-btn reject"  onclick="actReport('${r._key}','rejected')">❌ रद्द करें</button>
+      ${isAdmin()&&!isLegacy&&r.status==='pending'?`<div class="action-row">
+        <button class="act-btn approve" onclick="actReport('${r._key}','approved')">✅ मंजूर</button>
+        <button class="act-btn reject"  onclick="actReport('${r._key}','rejected')">❌ अस्वीकार</button>
       </div>`:''}
     </div>`;
   }).join('') : '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">कोई रिपोर्ट नहीं</div></div>';
@@ -6755,7 +6405,7 @@ async function rejectLoginRequest(reqKey, empName){
 }
 
 function renderPending(){
-  // ── Login Requests (Admin only — device access control) ──
+  // ── Login Requests (Admin must approve each device login) ──
   if(isAdmin()){
     const lrEl = document.getElementById('pendingLoginRequests');
     fbGet('loginRequests').then(data=>{
@@ -6770,9 +6420,10 @@ function renderPending(){
             <div class="card-ico" style="background:rgba(249,115,22,.15)">&#128241;</div>
             <div class="card-body">
               <div class="card-name">${v.empName}</div>
-              <div class="card-sub">Code: ${v.empId} · ${SEC[v.empSec]?.hi||v.empSec||'GLS'}</div>
+              <div class="card-sub">Code: ${v.empId} · ${SEC[v.empSec]?.hi||v.empSec||'GLS'}${v.phone?' · 📱 '+v.phone:''}</div>
               <div class="card-meta">${new Date(v.requestedAt).toLocaleString('hi-IN')}</div>
               ${v.isNewReg?'<div style="font-size:11px;color:#f97316;font-weight:700">&#128100; Newly Registered Employee</div>':''}
+              ${v.selfieUrl?`<div style="margin-top:8px"><img src="${v.selfieUrl}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;border:2px solid rgba(249,115,22,.4)" onclick="window.open('${v.selfieUrl}','_blank')"></div><div style="font-size:10px;color:#64748b;margin-top:3px">📸 Selfie (tap to zoom)</div>`:'<div style="font-size:11px;color:#f43f5e;margin-top:4px">⚠️ Selfie नहीं है</div>'}
             </div>
           </div>
           <div class="action-row">
@@ -6781,10 +6432,6 @@ function renderPending(){
           </div>
         </div>`).join('');
     }).catch(()=>{ if(lrEl) lrEl.innerHTML=''; });
-  } else if(isManager()){
-    // Manager sees device requests section with a note that login approval is admin-only
-    const lrEl = document.getElementById('pendingLoginRequests');
-    if(lrEl) lrEl.innerHTML='<div class="empty" style="padding:12px"><div class="empty-text" style="font-size:11px;color:var(--muted)">🛡️ Login approval सिर्फ Admin कर सकते हैं</div></div>';
   }
   // Device change requests
   renderPendingDevices();
@@ -6795,9 +6442,10 @@ function renderPending(){
       <div class="card-row">
         <div class="card-ico" style="background:${r.isExternal?'rgba(56,189,248,.12)':'var(--daybg)'}">${r.isExternal?(r.companyIco||'🏢'):'👤'}</div>
         <div class="card-body">
-          <div class="card-name">${r.name}</div>
+          <div class="card-name">${r.name||r.empId}</div>
           <div class="card-sub">Code: ${r.empId} · ${SEC[r.sec]?.hi||r.dept||''} ${r.phone?'· 📱 '+r.phone:''}</div>
           <div class="card-meta">${new Date(r.requestedAt).toLocaleString('hi-IN')}</div>
+          ${r.selfieUrl?`<div style="margin-top:8px"><img src="${r.selfieUrl}" style="width:80px;height:80px;border-radius:10px;object-fit:cover;border:2px solid rgba(249,115,22,.4)" onclick="window.open('${r.selfieUrl}','_blank')"></div><div style="font-size:10px;color:#64748b;margin-top:3px">📸 Selfie (tap to zoom)</div>`:'<div style="font-size:11px;color:#f43f5e;margin-top:4px">⚠️ Selfie नहीं है</div>'}
         </div>
       </div>
       <div class="action-row">
@@ -6842,8 +6490,8 @@ function renderPending(){
         </div>
       </div>
       <div class="action-row">
-        <button class="act-btn approve" onclick="actReport('${r._key}','approved')">✅ Publish करें</button>
-        <button class="act-btn reject"  onclick="actReport('${r._key}','rejected')">❌ रद्द करें</button>
+        <button class="act-btn approve" onclick="actReport('${r._key}','approved')">✅ मंजूर</button>
+        <button class="act-btn reject"  onclick="actReport('${r._key}','rejected')">❌ अस्वीकार</button>
       </div>
     </div>`;
   }).join('') :
@@ -8003,7 +7651,7 @@ function lockSession(){
 }
 
 // Rate limiter for login attempts
-const _loginAttempts = { admin:{count:0,lockUntil:0}, manager:{count:0,lockUntil:0}, worker:{count:0,lockUntil:0} };
+const _loginAttempts = { admin:{count:0,lockUntil:0}, worker:{count:0,lockUntil:0} };
 function checkRateLimit(type){
   const a = _loginAttempts[type];
   if(!a) return {ok:true};
@@ -9418,29 +9066,8 @@ function initiatePayment(){
   const pi_check = PLAN_INFO[_selectedPlan]||PLAN_INFO.met_operation;
   const amount = getPrice(_selectedPlan) * 100;
 
-  // Check if Razorpay is loaded AND key is configured
-  if(typeof Razorpay === 'undefined' || RAZORPAY_KEY === 'rzp_test_YourKeyHere'){
-    showUPIFallback(name, phone, amount);
-    return;
-  }
-
-  const pi2 = PLAN_INFO[_selectedPlan]||PLAN_INFO.met_operation;
-  const options = {
-    key: RAZORPAY_KEY,
-    amount: getPrice(_selectedPlan) * 100,
-    currency: 'INR',
-    name: 'M·P Learn',
-    description: pi2.name + ' — 1 Month',
-    prefill: { name, contact: phone, email: document.getElementById('payEmail').value||'' },
-    notes: { plan: _selectedPlan },
-    theme: { color: '#a855f7' },
-    handler: function(response){
-      onPaymentSuccess(response, _selectedPlan, name, phone);
-    },
-    modal: { ondismiss: function(){ toast('Payment रद्द किया'); } }
-  };
-  const rzp = new Razorpay(options);
-  rzp.open();
+  // UPI payment only (Razorpay removed)
+  showUPIFallback(name, phone, amount);
 }
 
 function showUPIFallback(name, phone, amount){
