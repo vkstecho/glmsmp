@@ -1,0 +1,2593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SupSkill — by GLS Metallisers</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════
+   SUPSKILL · DESIGN SYSTEM
+   Industrial Dark · BOBST SCADA-matched colours
+════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* Backgrounds */
+  --bg0:#090c0f; --bg1:#111518; --bg2:#181d24; --bg3:#1f252e; --bg4:#272e39;
+  /* Lines */
+  --ln:#ffffff0b; --ln2:#ffffff16; --ln3:#ffffff22;
+  /* SCADA Colours — matching BOBST conventions */
+  --green:#2ecc71;  --gd:#2ecc7118;   /* Running / On / Good */
+  --red:#e74c3c;    --rd:#e74c3c18;   /* Alarm / Fault / Bad */
+  --yellow:#f1c40f; --yd:#f1c40f18;   /* Warning */
+  --blue:#3498db;   --bd:#3498db18;   /* Data readouts */
+  --teal:#00b4a0;   --td:#00b4a018;   /* SupSkill accent */
+  --gold:#e8a200;   --gld:#e8a20018;  /* Achievement / Paid */
+  --orange:#e67e22; --od:#e67e2218;
+  --purple:#9b6ef0; --pd:#9b6ef018;
+  /* Text */
+  --t1:#dde3ea; --t2:#7d8a96; --t3:#414c58;
+  /* Radius */
+  --r:8px; --rl:14px; --rxl:20px;
+}
+.light{
+  --bg0:#ebe8e2; --bg1:#e2dfd8; --bg2:#ffffff; --bg3:#f3f0ea; --bg4:#eae6df;
+  --ln:#00000008; --ln2:#00000013; --ln3:#0000001e;
+  --t1:#181b1f; --t2:#56616e; --t3:#96a0aa;
+  --gd:#2ecc7112; --rd:#e74c3c12; --yd:#f1c40f12;
+  --bd:#3498db12; --td:#00b4a012; --gld:#e8a20012; --od:#e67e2212; --pd:#9b6ef012;
+}
+html,body{font-family:'Barlow',sans-serif;background:var(--bg0);color:var(--t1);min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s;}
+
+/* NOISE GRAIN */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");opacity:.5;}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;position:relative;z-index:1;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ════ LOGIN SCREEN ════ */
+#s-login{align-items:center;justify-content:center;padding:20px;
+  background:radial-gradient(ellipse at 30% 20%, #1a2535 0%, var(--bg0) 60%);}
+.login-card{background:var(--bg1);border:1px solid var(--ln2);border-radius:var(--rxl);
+  width:100%;max-width:400px;overflow:hidden;animation:risein .5s ease both;}
+@keyframes risein{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.lc-accent{height:3px;background:linear-gradient(90deg,var(--gold),var(--orange),var(--teal));}
+.lc-body{padding:32px 30px;}
+.lc-logo{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.lc-icon{width:50px;height:50px;border-radius:12px;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:#000;flex-shrink:0;}
+.lc-brand{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;
+  letter-spacing:1px;color:var(--t1);line-height:1;}
+.lc-brand span{color:var(--gold);}
+.lc-byline{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
+.lc-tagline{font-size:13px;color:var(--t2);margin-bottom:22px;line-height:1.5;}
+.lc-tagline span{color:var(--teal);font-weight:600;}
+
+/* SCADA STATUS STRIP */
+.scada-strip{display:flex;gap:7px;margin-bottom:22px;flex-wrap:wrap;}
+.sc-item{display:flex;align-items:center;gap:5px;background:var(--bg3);
+  border:1px solid var(--ln2);border-radius:5px;padding:4px 9px;
+  font-size:11px;font-weight:600;color:var(--t2);}
+.sc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sc-dot.g{background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2s infinite;}
+.sc-dot.y{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
+.sc-dot.r{background:var(--red);box-shadow:0 0 6px var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.field{margin-bottom:14px;}
+.field-label{font-size:10px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:1.2px;margin-bottom:6px;}
+.field-input{width:100%;background:var(--bg3);border:1.5px solid var(--ln2);
+  border-radius:var(--r);padding:11px 14px;font-size:14px;
+  font-family:'Barlow',sans-serif;color:var(--t1);outline:none;transition:border-color .15s;}
+.field-input:focus{border-color:var(--gold);}
+.field-input::placeholder{color:var(--t3);}
+.field-hint{font-size:11px;color:var(--t3);margin-top:5px;}
+
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--gold),#a86000);
+  border:none;border-radius:var(--r);padding:13px;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;
+  letter-spacing:1px;text-transform:uppercase;color:#000;
+  transition:transform .15s,box-shadow .15s;margin-top:4px;}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px #e8a20040;}
+
+.lc-bottom{display:flex;align-items:center;justify-content:space-between;
+  margin-top:18px;padding-top:16px;border-top:1px solid var(--ln);}
+.lang-toggle{display:flex;background:var(--bg3);border-radius:6px;padding:3px;gap:2px;}
+.lang-btn{padding:5px 11px;font-size:11px;font-weight:700;color:var(--t3);
+  border-radius:4px;cursor:pointer;border:none;background:none;
+  font-family:'Barlow',sans-serif;transition:all .15s;}
+.lang-btn.act{background:var(--bg4);color:var(--t1);}
+.theme-sw{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--t2);
+  cursor:pointer;border:none;background:none;font-family:'Barlow',sans-serif;}
+.sw-track{width:34px;height:19px;background:var(--bg4);border-radius:10px;
+  position:relative;border:1px solid var(--ln2);flex-shrink:0;}
+.sw-thumb{width:13px;height:13px;border-radius:50%;background:var(--t3);
+  position:absolute;top:2px;left:2px;transition:all .25s;}
+.light .sw-thumb{transform:translateX(15px);background:var(--gold);}
+
+/* ════ MAIN APP SHELL ════ */
+#s-app{flex-direction:row;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{width:230px;background:var(--bg1);border-right:1px solid var(--ln2);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;
+  z-index:200;transition:transform .3s;}
+.sidebar.closed{transform:translateX(-100%);}
+.sl-logo{padding:18px 18px 14px;border-bottom:1px solid var(--ln2);
+  display:flex;align-items:center;gap:10px;}
+.sl-icon{width:36px;height:36px;border-radius:9px;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;color:#000;flex-shrink:0;}
+.sl-brand{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;
+  letter-spacing:1px;color:var(--t1);}
+.sl-brand span{color:var(--gold);}
+.sl-user{padding:11px 16px;border-bottom:1px solid var(--ln);
+  display:flex;align-items:center;gap:9px;cursor:pointer;}
+.sl-av{width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:#000;flex-shrink:0;}
+.sl-uname{font-size:13px;font-weight:600;color:var(--t1);line-height:1.2;}
+.sl-urole{font-size:10px;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-top:1px;}
+.sl-uplant{font-size:10px;color:var(--t3);}
+.sl-nav{flex:1;overflow-y:auto;padding:8px 0;}
+.nl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;
+  letter-spacing:2px;padding:10px 16px 4px;}
+.ni{display:flex;align-items:center;gap:9px;padding:9px 16px;
+  font-size:13px;font-weight:500;color:var(--t2);cursor:pointer;
+  transition:all .15s;position:relative;border:none;background:none;
+  width:100%;text-align:left;font-family:'Barlow',sans-serif;}
+.ni:hover{color:var(--t1);background:var(--ln);}
+.ni.act{color:var(--gold);background:var(--gld);}
+.ni.act::before{content:'';position:absolute;left:0;top:4px;bottom:4px;
+  width:3px;background:var(--gold);border-radius:0 2px 2px 0;}
+.ni-ic{font-size:15px;width:20px;text-align:center;flex-shrink:0;}
+.ni-badge{margin-left:auto;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;}
+.ni-badge.red{background:#e74c3c22;color:var(--red);border:1px solid #e74c3c50;}
+.ni-badge.gold{background:#e8a20022;color:var(--gold);border:1px solid #e8a20050;}
+.ni-badge.teal{background:#00b4a022;color:var(--teal);border:1px solid #00b4a050;}
+.sl-bottom{padding:11px 16px;border-top:1px solid var(--ln);
+  display:flex;flex-direction:column;gap:8px;}
+.sl-lang-row{display:flex;align-items:center;justify-content:space-between;}
+.sl-lang-lbl{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;}
+
+/* MAIN CONTENT AREA */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+
+/* TOPBAR */
+.topbar{background:var(--bg1);border-bottom:1px solid var(--ln2);
+  padding:11px 22px;display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:100;}
+.hamburger{display:none;background:var(--bg3);border:1px solid var(--ln2);
+  border-radius:6px;padding:6px 9px;cursor:pointer;font-size:15px;color:var(--t2);
+  font-family:'Barlow',sans-serif;}
+.tb-info{flex:1;}
+.tb-title{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;
+  color:var(--t1);letter-spacing:.5px;line-height:1;}
+.tb-title span{color:var(--gold);}
+.tb-sub{font-size:10px;color:var(--t3);margin-top:2px;}
+.tb-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+.machine-pill{display:flex;align-items:center;gap:6px;background:var(--bg3);
+  border:1px solid var(--ln2);border-radius:20px;padding:5px 12px;
+  font-size:11px;font-weight:700;color:var(--t2);}
+.notif-btn{width:35px;height:35px;background:var(--bg3);border:1px solid var(--ln2);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;
+  font-size:15px;cursor:pointer;position:relative;}
+.nb-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;
+  border-radius:50%;background:var(--red);border:2px solid var(--bg1);}
+
+/* PAGE CONTENT */
+.page-content{padding:20px 22px;flex:1;}
+.panel{display:none;}
+.panel.act{display:block;}
+
+/* SECTION HEADER */
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.sec-title{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:2.5px;color:var(--t3);}
+.sec-link{font-size:12px;font-weight:600;color:var(--teal);
+  background:none;border:none;cursor:pointer;font-family:'Barlow',sans-serif;}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--rl);
+  overflow:hidden;margin-bottom:16px;}
+.card-body{padding:16px 18px;}
+.card-top-bar{height:3px;}
+.card-top-bar.rainbow{background:linear-gradient(90deg,var(--green),var(--teal),var(--gold));}
+.card-top-bar.gold{background:linear-gradient(90deg,var(--gold),var(--orange));}
+.card-top-bar.teal{background:linear-gradient(90deg,var(--teal),var(--blue));}
+
+/* SCADA READOUT */
+.scada-card{background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--rl);
+  margin-bottom:16px;overflow:hidden;position:relative;}
+.scada-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--green),var(--teal),var(--blue));}
+.sc-head{padding:14px 18px 10px;display:flex;align-items:flex-start;justify-content:space-between;}
+.sc-machine{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;
+  color:var(--t1);letter-spacing:1px;line-height:1;}
+.sc-machine small{font-size:11px;font-weight:500;color:var(--t3);
+  display:block;font-family:'Barlow',sans-serif;letter-spacing:0;margin-top:3px;}
+.sc-running{display:flex;align-items:center;gap:6px;background:var(--gd);
+  border:1px solid #2ecc7128;border-radius:20px;padding:5px 12px;
+  font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;}
+.sc-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:0 18px 14px;}
+.sc-stat{background:var(--bg3);border:1px solid var(--ln);border-radius:var(--r);padding:10px 12px;}
+.sc-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;line-height:1;}
+.sc-val.blue{color:var(--blue);}
+.sc-val.green{color:var(--green);}
+.sc-val.yellow{color:var(--yellow);}
+.sc-val.teal{color:var(--teal);}
+.sc-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
+.sc-unit{font-size:10px;color:var(--t2);}
+
+/* OD BAR CHART */
+.od-chart-wrap{padding:4px 18px 14px;}
+.od-label{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.od-bars{display:flex;align-items:flex-end;gap:2px;height:50px;}
+.od-bar{flex:1;border-radius:2px 2px 0 0;min-height:3px;transition:height .4s;}
+.od-bar.g{background:var(--green);}
+.od-bar.b{background:var(--blue);}
+.od-bar.y{background:var(--yellow);}
+.sc-actions{padding:0 18px 16px;display:flex;gap:8px;}
+
+/* BUTTONS */
+.btn-gold{background:linear-gradient(135deg,var(--gold),#a86000);border:none;
+  border-radius:var(--r);padding:10px 16px;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;
+  letter-spacing:.5px;text-transform:uppercase;color:#000;
+  transition:transform .15s,box-shadow .15s;flex:1;}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 5px 18px #e8a20040;}
+.btn-ghost{background:var(--bg3);border:1px solid var(--ln2);border-radius:var(--r);
+  padding:10px 14px;font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t2);
+  cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn-ghost:hover{color:var(--t1);}
+.btn-teal{background:var(--teal);border:none;border-radius:var(--r);
+  padding:10px 16px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;
+  font-size:15px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;
+  color:#000;transition:transform .15s,box-shadow .15s;}
+.btn-teal:hover{transform:translateY(-1px);box-shadow:0 5px 18px #00b4a040;}
+
+/* ALERT STRIP */
+.alert-strip{background:var(--bg2);border:1px solid var(--ln2);
+  border-left:3px solid var(--orange);border-radius:var(--r);
+  padding:11px 14px;margin-bottom:16px;display:flex;align-items:flex-start;
+  gap:10px;cursor:pointer;transition:border-color .2s;}
+.alert-strip:hover{border-left-color:var(--yellow);}
+.as-icon{font-size:18px;flex-shrink:0;margin-top:1px;}
+.as-eye{font-size:9px;font-weight:700;color:var(--orange);
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px;}
+.as-title{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;
+  color:var(--t1);line-height:1.2;margin-bottom:2px;}
+.as-sub{font-size:11px;color:var(--t2);}
+.as-arrow{font-size:18px;color:var(--t3);flex-shrink:0;align-self:center;}
+
+/* TODAY LESSON */
+.lesson-hero{background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--rl);
+  overflow:hidden;margin-bottom:16px;cursor:pointer;transition:transform .2s,box-shadow .2s;}
+.lesson-hero:hover{transform:translateY(-2px);box-shadow:0 8px 28px #00000055;}
+.lh-top{height:3px;background:linear-gradient(90deg,var(--teal),var(--gold));}
+.lh-body{padding:16px 18px;display:flex;gap:14px;align-items:center;}
+.lh-thumb{width:52px;height:52px;background:var(--td);border:1px solid #00b4a028;
+  border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-size:26px;flex-shrink:0;}
+.lh-info{flex:1;}
+.lh-eye{font-size:9px;font-weight:700;color:var(--teal);
+  text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}
+.lh-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;
+  color:var(--t1);letter-spacing:.3px;line-height:1.1;margin-bottom:2px;}
+.lh-hi{font-size:12px;color:var(--t3);margin-bottom:7px;}
+.lh-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:4px;
+  text-transform:uppercase;letter-spacing:.5px;}
+.tag.free{background:#2ecc7122;color:var(--green);border:1px solid #2ecc7140;}
+.tag.paid{background:#e8a20022;color:var(--gold);border:1px solid #e8a20040;}
+.tag.video{background:#00b4a022;color:var(--teal);border:1px solid #00b4a040;}
+.tag.quiz{background:#3498db22;color:var(--blue);border:1px solid #3498db40;}
+.tag.card{background:#e67e2222;color:var(--orange);border:1px solid #e67e2240;}
+.lh-play{width:44px;height:44px;background:var(--teal);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  flex-shrink:0;cursor:pointer;transition:transform .15s,box-shadow .15s;border:none;
+  color:#000;font-weight:900;}
+.lh-play:hover{transform:scale(1.1);box-shadow:0 0 18px #00b4a055;}
+
+/* LESSON GRID */
+.lesson-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.lc{background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--rl);
+  padding:13px;cursor:pointer;transition:transform .18s,box-shadow .18s;position:relative;overflow:hidden;}
+.lc:hover{transform:translateY(-2px);box-shadow:0 6px 20px #00000044;}
+.lc.locked::after{content:'🔒';position:absolute;top:10px;right:10px;font-size:13px;}
+.lc.done::after{content:'✓';position:absolute;top:8px;right:10px;
+  font-size:14px;font-weight:700;color:var(--green);}
+.lc-icon{font-size:24px;margin-bottom:8px;display:block;}
+.lc-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
+  color:var(--t1);line-height:1.2;margin-bottom:4px;margin-top:5px;}
+.lc-meta{font-size:10px;color:var(--t3);}
+
+/* PROGRESS */
+.prog-card{background:var(--bg2);border:1px solid var(--ln2);
+  border-radius:var(--rl);padding:14px 18px;margin-bottom:16px;}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.prog-title{font-size:13px;font-weight:600;color:var(--t1);}
+.prog-count{font-size:11px;color:var(--t3);}
+.prog-bar-bg{background:var(--bg3);border-radius:6px;height:7px;overflow:hidden;margin-bottom:10px;}
+.prog-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--gold));}
+.streak-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);}
+.streak-fire{font-size:18px;}
+.streak-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;color:var(--gold);}
+
+/* ══ SHIFT REPORT FORM ══ */
+.form-steps{display:flex;align-items:center;padding:14px 18px 8px;gap:0;}
+.step-item{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+.step-item:not(:last-child)::after{content:'';position:absolute;top:13px;left:60%;right:-40%;
+  height:2px;background:var(--ln2);z-index:0;}
+.step-item.done:not(:last-child)::after{background:var(--teal);}
+.step-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:11px;font-weight:700;
+  border:2px solid var(--ln2);background:var(--bg2);color:var(--t3);
+  position:relative;z-index:1;transition:all .2s;}
+.step-item.done .step-dot{background:var(--teal);border-color:var(--teal);color:#000;}
+.step-item.active .step-dot{background:var(--gold);border-color:var(--gold);color:#000;}
+.step-lbl{font-size:9px;color:var(--t3);margin-top:4px;font-weight:600;
+  letter-spacing:.5px;text-transform:uppercase;text-align:center;}
+.step-item.active .step-lbl{color:var(--gold);}
+.step-item.done .step-lbl{color:var(--teal);}
+
+.form-section{background:var(--bg2);border:1px solid var(--ln2);
+  border-radius:var(--rl);margin-bottom:12px;overflow:hidden;}
+.fs-head{padding:11px 16px;background:var(--bg3);display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--ln);}
+.fs-head h3{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
+  color:var(--t1);text-transform:uppercase;letter-spacing:.5px;}
+.fs-num{background:var(--gold);color:#000;font-size:11px;font-weight:800;
+  width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fs-num.done{background:var(--teal);color:#000;}
+.fs-edit{margin-left:auto;font-size:11px;color:var(--teal);cursor:pointer;
+  background:none;border:none;font-family:'Barlow',sans-serif;}
+.fs-body{padding:14px 16px;}
+
+.f-label{font-size:10px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;}
+.auto-tag{background:#2ecc7122;color:var(--green);font-size:9px;
+  font-weight:700;padding:1px 6px;border-radius:4px;text-transform:uppercase;
+  letter-spacing:.5px;border:1px solid #2ecc7140;}
+.f-auto{background:#2ecc7114;border:1px solid #2ecc7140;border-radius:var(--r);
+  padding:9px 12px;font-size:13px;font-weight:700;color:var(--green);
+  display:flex;align-items:center;justify-content:space-between;}
+.f-input{background:var(--bg3);border:1.5px solid var(--ln2);border-radius:var(--r);
+  padding:9px 12px;font-size:14px;font-family:'Barlow',sans-serif;
+  color:var(--t1);width:100%;outline:none;transition:border-color .15s;appearance:none;}
+.f-input:focus{border-color:var(--gold);}
+.f-select{background:var(--bg3);border:1.5px solid var(--ln2);border-radius:var(--r);
+  padding:9px 12px;font-size:13px;font-family:'Barlow',sans-serif;
+  color:var(--t1);width:100%;outline:none;cursor:pointer;appearance:none;}
+.f-select:focus{border-color:var(--gold);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+
+/* OPERATOR CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.chip{display:flex;align-items:center;gap:5px;background:var(--bg3);
+  border:1px solid var(--ln2);color:var(--t1);border-radius:20px;
+  padding:5px 10px 5px 8px;font-size:12px;font-weight:500;}
+.chip-av{width:18px;height:18px;border-radius:50%;background:var(--teal);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:800;color:#000;flex-shrink:0;}
+.chip-x{font-size:14px;color:var(--t3);cursor:pointer;margin-left:2px;line-height:1;}
+.add-chip{display:flex;align-items:center;gap:5px;background:transparent;
+  border:1.5px dashed var(--ln2);border-radius:20px;padding:5px 11px;
+  font-size:12px;color:var(--t3);cursor:pointer;font-family:'Barlow',sans-serif;}
+
+/* SHIFT TOGGLE */
+.shift-toggle{display:grid;grid-template-columns:1fr 1fr;background:var(--bg3);
+  border:1.5px solid var(--ln2);border-radius:var(--r);overflow:hidden;margin-bottom:12px;}
+.shift-btn{padding:11px;text-align:center;font-size:13px;font-weight:700;
+  color:var(--t2);cursor:pointer;transition:all .2s;border:none;background:none;
+  font-family:'Barlow',sans-serif;}
+.shift-btn span{font-size:10px;font-weight:400;opacity:.7;display:block;margin-top:2px;}
+.shift-btn.act{background:var(--bg1);color:var(--gold);}
+
+/* SETUP MULTI-ENTRY */
+.setup-group{background:var(--bg3);border-radius:var(--r);padding:10px;margin-bottom:8px;}
+.setup-entry{display:grid;grid-template-columns:1fr 72px 28px;gap:6px;
+  align-items:center;margin-bottom:6px;}
+.setup-entry:last-child{margin-bottom:0;}
+.entry-select{background:var(--bg2);border:1.5px solid var(--ln2);border-radius:var(--r);
+  padding:8px 10px;font-size:12px;font-family:'Barlow',sans-serif;
+  color:var(--t1);width:100%;outline:none;cursor:pointer;appearance:none;}
+.entry-mins{background:var(--bg2);border:1.5px solid var(--ln2);border-radius:var(--r);
+  padding:8px 6px;font-size:13px;font-family:'Barlow',sans-serif;
+  color:var(--t1);width:100%;outline:none;text-align:center;}
+.entry-select:focus,.entry-mins:focus{border-color:var(--gold);}
+.rm-btn{background:none;border:none;color:var(--t3);font-size:18px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+.rm-btn:hover{color:var(--red);}
+.add-entry{background:transparent;border:1.5px dashed var(--ln2);border-radius:var(--r);
+  padding:8px 12px;font-size:12px;color:var(--teal);font-family:'Barlow',sans-serif;
+  cursor:pointer;width:100%;text-align:left;display:flex;align-items:center;gap:6px;
+  font-weight:600;margin-top:4px;}
+.add-entry:hover{border-color:var(--teal);}
+
+/* DT SUMMARY */
+.dt-summary{background:var(--bg3);border-radius:var(--r);padding:10px 14px;
+  display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+
+/* PRODUCTION GRID */
+.prod-row{display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:8px;
+  align-items:center;margin-bottom:8px;}
+.prod-row-lbl{font-size:12px;font-weight:600;color:var(--t2);}
+.prod-cell{background:var(--bg3);border:1.5px solid var(--ln2);
+  border-radius:var(--r);padding:8px 6px;text-align:center;}
+.prod-cell-lbl{font-size:9px;color:var(--t3);font-weight:700;
+  letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;}
+.prod-cell input{background:transparent;border:none;outline:none;
+  font-size:14px;font-weight:700;color:var(--t1);width:100%;
+  text-align:center;font-family:'Barlow',sans-serif;}
+.prod-cell input::placeholder{color:var(--ln3);font-weight:400;font-size:12px;}
+
+/* LIVE CALC BAR */
+.live-calc{background:var(--bg3);border:1px solid var(--ln2);
+  border-radius:var(--r);padding:12px 14px;display:flex;
+  justify-content:space-between;align-items:center;margin-top:8px;
+  border-top:2px solid var(--gold);}
+.lc-stat{text-align:center;}
+.lc-val{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;line-height:1;}
+.lc-lbl{font-size:9px;color:var(--t2);text-transform:uppercase;
+  letter-spacing:.5px;margin-top:2px;}
+.lc-div{width:1px;height:32px;background:var(--ln2);}
+
+/* WASTE */
+.waste-box{background:var(--od);border:1px solid #e67e2225;border-radius:var(--r);
+  padding:12px;margin-top:10px;}
+.waste-title{font-size:10px;font-weight:700;color:var(--orange);
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.waste-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.waste-field{text-align:center;}
+.waste-lbl{font-size:10px;color:var(--t3);font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.waste-input{background:var(--bg2);border:1.5px solid #e67e2230;border-radius:var(--r);
+  padding:9px;font-size:16px;font-weight:700;font-family:'Barlow Condensed',sans-serif;
+  color:var(--orange);width:100%;text-align:center;outline:none;}
+
+/* SUBMIT */
+.submit-area{padding:14px;}
+.draft-btn{width:100%;background:var(--bg3);border:1.5px solid var(--ln3);
+  border-radius:var(--r);padding:11px;font-size:14px;font-weight:600;
+  color:var(--t1);font-family:'Barlow',sans-serif;cursor:pointer;margin-bottom:8px;}
+.submit-btn{width:100%;background:linear-gradient(135deg,var(--gold),#a86000);
+  border:none;border-radius:var(--r);padding:14px;
+  font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;
+  letter-spacing:.5px;text-transform:uppercase;color:#000;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;}
+.submit-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px #e8a20040;}
+.submit-note{font-size:11px;color:var(--t3);text-align:center;margin-top:8px;line-height:1.5;}
+
+/* ══ UPLOAD ANALYSIS ══ */
+.upload-zone{background:var(--bg2);border:1.5px dashed var(--ln3);
+  border-radius:var(--rl);padding:28px 22px;text-align:center;
+  cursor:pointer;transition:all .2s;position:relative;margin-bottom:16px;}
+.upload-zone:hover{border-color:var(--teal);background:var(--td);}
+.uz-icon{font-size:36px;margin-bottom:10px;}
+.uz-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;
+  color:var(--t1);margin-bottom:5px;}
+.uz-title span{color:var(--teal);}
+.uz-sub{font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px;}
+.uz-formats{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+.fmt{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;
+  background:var(--bg3);color:var(--t2);text-transform:uppercase;
+  border:1px solid var(--ln2);}
+.uz-btn{display:inline-flex;align-items:center;gap:6px;background:var(--teal);
+  color:#000;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;
+  letter-spacing:.5px;text-transform:uppercase;border:none;border-radius:var(--r);
+  padding:9px 18px;cursor:pointer;transition:box-shadow .15s;}
+.uz-btn:hover{box-shadow:0 0 18px #00b4a044;}
+input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+
+.analysis-card{background:var(--bg2);border:1px solid var(--ln2);
+  border-radius:var(--rl);padding:16px 18px;margin-bottom:16px;}
+.ac-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;
+  padding-bottom:12px;border-bottom:1px solid var(--ln);}
+.ac-title{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--t1);}
+.ac-file{font-size:11px;color:var(--t3);margin-top:2px;}
+.ac-badge{margin-left:auto;background:var(--gd);color:var(--green);
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;
+  border:1px solid #2ecc7128;text-transform:uppercase;letter-spacing:.5px;}
+.ac-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.ac-stat{background:var(--bg3);border:1px solid var(--ln2);border-radius:var(--r);padding:10px;}
+.ac-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;line-height:1;}
+.ac-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
+.ac-insights{display:flex;flex-direction:column;gap:7px;}
+.ac-insight{display:flex;gap:10px;background:var(--bg3);border-radius:var(--r);padding:10px 12px;}
+.aci-icon{font-size:15px;flex-shrink:0;margin-top:1px;}
+.aci-text{font-size:12px;color:var(--t2);line-height:1.5;}
+.aci-text strong{color:var(--t1);font-weight:600;}
+
+/* ══ LESSONS PANEL ══ */
+.lesson-player{background:var(--bg2);border:1px solid var(--ln2);
+  border-radius:var(--rl);overflow:hidden;margin-bottom:16px;}
+.lp-video{background:var(--bg3);height:200px;display:flex;align-items:center;
+  justify-content:center;position:relative;cursor:pointer;}
+.lp-video-overlay{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:10px;}
+.lp-play-big{width:60px;height:60px;background:var(--teal);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  border:none;cursor:pointer;transition:transform .15s,box-shadow .15s;}
+.lp-play-big:hover{transform:scale(1.1);box-shadow:0 0 24px #00b4a066;}
+.lp-video-title{font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  font-weight:700;color:var(--t2);}
+.lp-body{padding:16px 18px;}
+.lp-title{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;
+  color:var(--t1);line-height:1.1;margin-bottom:4px;}
+.lp-hi{font-size:13px;color:var(--t3);margin-bottom:10px;}
+.lp-desc{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:14px;}
+.lp-cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.info-card{background:var(--bg3);border-radius:var(--r);padding:12px;
+  border-left:3px solid var(--teal);}
+.info-card.orange{border-left-color:var(--orange);}
+.info-card.green{border-left-color:var(--green);}
+.info-card.red{border-left-color:var(--red);}
+.info-card h4{font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  font-weight:700;color:var(--t1);margin-bottom:4px;}
+.info-card p{font-size:11px;color:var(--t2);line-height:1.5;}
+
+/* QUIZ */
+.quiz-box{background:var(--bg3);border-radius:var(--rl);padding:16px;margin-bottom:14px;}
+.quiz-q{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;
+  color:var(--t1);margin-bottom:12px;}
+.quiz-opts{display:flex;flex-direction:column;gap:7px;}
+.quiz-opt{background:var(--bg2);border:1.5px solid var(--ln2);border-radius:var(--r);
+  padding:10px 14px;font-size:13px;color:var(--t2);cursor:pointer;
+  transition:all .15s;text-align:left;font-family:'Barlow',sans-serif;}
+.quiz-opt:hover{border-color:var(--teal);color:var(--t1);}
+.quiz-opt.correct{border-color:var(--green);background:var(--gd);color:var(--green);}
+.quiz-opt.wrong{border-color:var(--red);background:var(--rd);color:var(--red);}
+
+/* ══ PROGRESS PANEL ══ */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.stat-card{background:var(--bg2);border:1px solid var(--ln2);
+  border-radius:var(--rl);padding:14px;text-align:center;}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:900;line-height:1;}
+.stat-lbl{font-size:10px;color:var(--t3);text-transform:uppercase;
+  letter-spacing:.8px;margin-top:4px;}
+
+/* ══ CALCULATORS PANEL ══ */
+.calc-header{background:var(--bg2);border:1px solid var(--ln2);
+  border-left:3px solid var(--purple);border-radius:var(--rl);padding:16px 18px;margin-bottom:16px;}
+.calc-badge{display:inline-flex;align-items:center;gap:5px;
+  background:var(--pd);color:var(--purple);border:1px solid #9b6ef028;
+  font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;
+  text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;}
+.calc-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;
+  color:var(--t1);margin-bottom:6px;}
+.calc-desc{font-size:12px;color:var(--t2);line-height:1.6;}
+
+.matrix-table-wrap{background:var(--bg2);border:1px solid var(--ln2);
+  border-radius:var(--rl);overflow:hidden;margin-bottom:16px;}
+.mt-head{background:var(--bg3);padding:11px 16px;display:flex;align-items:center;gap:8px;}
+.mt-head h3{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;
+  color:var(--gold);text-transform:uppercase;letter-spacing:.5px;}
+table.matrix{width:100%;border-collapse:collapse;}
+table.matrix th{padding:8px;font-size:10px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--ln2);text-align:center;}
+table.matrix th.mic-col{text-align:left;padding-left:14px;width:80px;}
+table.matrix td{padding:7px 6px;border-bottom:1px solid var(--ln);text-align:center;}
+table.matrix tr:last-child td{border-bottom:none;}
+table.matrix td.mic-lbl{text-align:left;padding-left:14px;font-size:12px;font-weight:700;}
+.mic8{color:var(--blue);}
+.mic10{color:var(--teal);}
+.mic12{color:var(--orange);}
+.alox-c{color:var(--purple);}
+.mat-input{background:var(--bg3);border:1.5px solid var(--ln2);border-radius:6px;
+  padding:6px 4px;font-size:14px;font-weight:700;font-family:'Barlow Condensed',sans-serif;
+  width:70px;text-align:center;outline:none;}
+.mat-input:focus{border-color:var(--gold);}
+.mat-input.od22{color:var(--blue);}
+.mat-input.od25{color:var(--gold);}
+.mat-input.od28{color:var(--red);}
+.mat-input.na-cell{background:var(--bg3);color:var(--ln3);border-style:dashed;
+  pointer-events:none;font-size:11px;}
+.mat-result{background:var(--bg3);border:1px solid var(--ln2);
+  border-top:2px solid var(--teal);
+  border-radius:var(--r);padding:12px 14px;display:flex;
+  justify-content:space-between;align-items:center;margin:12px 16px 16px;}
+
+/* ══ UPGRADE MODAL ══ */
+.modal-overlay{position:fixed;inset:0;background:#000000cc;
+  z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.show{display:flex;}
+.modal{background:var(--bg1);border:1px solid var(--ln2);border-radius:var(--rxl);
+  width:100%;max-width:380px;overflow:hidden;animation:risein .3s ease both;}
+.modal-accent{height:3px;background:linear-gradient(90deg,var(--gold),var(--orange),var(--purple));}
+.modal-body{padding:28px 26px;}
+.modal-icon{font-size:36px;margin-bottom:12px;}
+.modal-title{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;
+  color:var(--t1);margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--t2);line-height:1.6;margin-bottom:18px;}
+.modal-features{list-style:none;margin-bottom:20px;}
+.modal-features li{display:flex;align-items:flex-start;gap:8px;
+  font-size:13px;color:var(--t2);padding:6px 0;
+  border-bottom:1px solid var(--ln);line-height:1.4;}
+.modal-features li:last-child{border-bottom:none;}
+.modal-features li::before{content:'✦';color:var(--gold);font-size:10px;margin-top:3px;flex-shrink:0;}
+.modal-price{display:flex;gap:10px;margin-bottom:16px;}
+.mp-card{flex:1;background:var(--bg3);border:1px solid var(--ln2);
+  border-radius:var(--rl);padding:14px;text-align:center;}
+.mp-card.rec{border-color:#e8a20030;background:linear-gradient(135deg,var(--bg3),#1e1500);}
+.mp-tier{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;
+  letter-spacing:1px;margin-bottom:5px;}
+.mp-price{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--t1);}
+.mp-period{font-size:10px;color:var(--t3);}
+.modal-btn{width:100%;background:linear-gradient(135deg,var(--gold),#a86000);
+  border:none;border-radius:var(--r);padding:13px;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;
+  letter-spacing:1px;text-transform:uppercase;color:#000;
+  transition:transform .15s,box-shadow .15s;margin-bottom:8px;}
+.modal-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px #e8a20040;}
+.modal-close{width:100%;background:transparent;border:1px solid var(--ln2);
+  border-radius:var(--r);padding:10px;cursor:pointer;font-size:13px;
+  color:var(--t2);font-family:'Barlow',sans-serif;}
+
+/* ══ BOTTOM NAV (mobile) ══ */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;
+  background:var(--bg1);border-top:1px solid var(--ln2);
+  padding:8px 0 12px;z-index:150;}
+.bn-wrap{display:flex;justify-content:space-around;}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:2px;
+  cursor:pointer;color:var(--t3);font-size:9px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;padding:4px 10px;
+  border:none;background:none;font-family:'Barlow',sans-serif;transition:color .15s;}
+.bn-item.act{color:var(--gold);}
+.bn-icon{font-size:20px;}
+
+/* SIDEBAR OVERLAY */
+.sb-overlay{display:none;position:fixed;inset:0;background:#00000088;z-index:190;}
+.sb-overlay.show{display:block;}
+
+/* NOTIF PANEL */
+.notif-panel{position:fixed;top:60px;right:16px;width:300px;
+  background:var(--bg1);border:1px solid var(--ln2);border-radius:var(--rl);
+  z-index:300;box-shadow:0 8px 32px #00000088;display:none;}
+.notif-panel.show{display:block;}
+.np-head{padding:12px 16px;border-bottom:1px solid var(--ln);
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:.5px;}
+.np-item{padding:11px 16px;border-bottom:1px solid var(--ln);
+  display:flex;gap:10px;cursor:pointer;}
+.np-item:last-child{border-bottom:none;}
+.np-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.np-title{font-size:12px;font-weight:600;color:var(--t1);margin-bottom:2px;}
+.np-sub{font-size:11px;color:var(--t3);}
+
+/* ANIMATIONS */
+.fade-up{animation:riseup .4s ease both;}
+@keyframes riseup{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}
+.d4{animation-delay:.2s}.d5{animation-delay:.25s}
+
+/* HELPERS */
+.mb8{margin-bottom:8px}.mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
+.info-note{background:var(--td);border:1px solid #00b4a033;border-radius:var(--r);
+  padding:9px 12px;font-size:12px;color:var(--teal);margin-bottom:12px;font-weight:600;}
+.divider-label{font-size:9px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:1px;
+  padding:6px 0 4px;border-bottom:1px solid var(--ln);margin-bottom:10px;}
+.prev-uploads{display:flex;flex-direction:column;gap:8px;}
+.prev-item{background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--r);
+  padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.prev-item:hover{border-color:var(--teal);}
+
+
+/* ══ REPORT STATUS ══ */
+.report-status-bar{border-radius:var(--r);padding:12px 16px;margin-bottom:14px;
+  display:flex;align-items:center;gap:12px;font-size:13px;font-weight:600;}
+.report-status-bar.submitted{background:#2ecc7118;border:1.5px solid #2ecc7140;color:var(--green);}
+.report-status-bar.duplicate{background:#e74c3c18;border:1.5px solid #e74c3c40;color:var(--red);}
+.report-status-bar.draft{background:#e8a20018;border:1.5px solid #e8a20040;color:var(--gold);}
+.rsb-icon{font-size:20px;flex-shrink:0;}
+.rsb-text{flex:1;line-height:1.4;}
+.rsb-text small{font-size:11px;font-weight:400;display:block;opacity:.8;margin-top:2px;}
+.rsb-btn{background:var(--bg3);border:1px solid var(--ln2);border-radius:var(--r);
+  padding:6px 12px;font-size:12px;font-weight:700;color:var(--t1);cursor:pointer;
+  font-family:'Barlow',sans-serif;white-space:nowrap;}
+
+/* ══ MANAGER REPORTS VIEW ══ */
+.report-list-item{background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--rl);
+  margin-bottom:10px;overflow:hidden;cursor:pointer;transition:border-color .15s;}
+.report-list-item:hover{border-color:var(--teal);}
+.rli-head{padding:12px 14px;display:flex;align-items:center;gap:10px;}
+.rli-date{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;
+  color:var(--t1);line-height:1;}
+.rli-date small{font-size:10px;font-weight:500;color:var(--t3);display:block;margin-top:2px;}
+.rli-machine{background:var(--td);color:var(--teal);font-size:10px;font-weight:700;
+  padding:3px 8px;border-radius:4px;border:1px solid #00b4a040;}
+.rli-shift{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;}
+.rli-shift.day{background:#f1c40f18;color:var(--yellow);border:1px solid #f1c40f40;}
+.rli-shift.night{background:#3498db18;color:var(--blue);border:1px solid #3498db40;}
+.rli-sup{font-size:12px;color:var(--t2);margin-left:auto;}
+.rli-eff{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;}
+.rli-eff.good{color:var(--green);}
+.rli-eff.warn{color:var(--yellow);}
+.rli-eff.bad{color:var(--red);}
+.rli-body{padding:0 14px 12px;display:none;}
+.rli-body.open{display:block;}
+.rli-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+.rli-stat{background:var(--bg3);border-radius:var(--r);padding:8px 10px;text-align:center;}
+.rli-stat-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:var(--t1);}
+.rli-stat-lbl{font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
+
+/* EDIT FORM */
+.edit-overlay{position:fixed;inset:0;background:#000000cc;z-index:999;
+  display:none;align-items:center;justify-content:center;padding:16px;}
+.edit-overlay.show{display:flex;}
+.edit-modal{background:var(--bg1);border:1px solid var(--ln2);border-radius:var(--rxl);
+  width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.edit-modal-head{padding:16px 18px;border-bottom:1px solid var(--ln);
+  position:sticky;top:0;background:var(--bg1);z-index:1;
+  display:flex;align-items:center;gap:10px;}
+.edit-modal-head h3{font-family:'Barlow Condensed',sans-serif;font-size:18px;
+  font-weight:800;color:var(--t1);text-transform:uppercase;letter-spacing:.5px;}
+.edit-modal-body{padding:16px 18px;}
+.edit-field{margin-bottom:12px;}
+.edit-label{font-size:10px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.edit-input{width:100%;background:var(--bg3);border:1.5px solid var(--ln2);
+  border-radius:var(--r);padding:9px 12px;font-size:14px;
+  font-family:'Barlow',sans-serif;color:var(--t1);outline:none;transition:border-color .15s;}
+.edit-input:focus{border-color:var(--gold);}
+.edit-reason{width:100%;background:var(--bg3);border:1.5px solid var(--orange);
+  border-radius:var(--r);padding:9px 12px;font-size:13px;
+  font-family:'Barlow',sans-serif;color:var(--t1);outline:none;min-height:70px;resize:vertical;}
+.edit-reason-label{font-size:10px;font-weight:700;color:var(--orange);
+  text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.edit-modal-foot{padding:14px 18px;border-top:1px solid var(--ln);
+  display:flex;gap:8px;}
+.btn-save-edit{flex:1;background:linear-gradient(135deg,var(--gold),#a86000);
+  border:none;border-radius:var(--r);padding:11px;cursor:pointer;
+  font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;
+  letter-spacing:.5px;text-transform:uppercase;color:#000;}
+.btn-cancel-edit{background:var(--bg3);border:1px solid var(--ln2);border-radius:var(--r);
+  padding:11px 16px;cursor:pointer;font-size:14px;font-weight:600;
+  color:var(--t2);font-family:'Barlow',sans-serif;}
+
+/* AUDIT TRAIL */
+.audit-row{display:flex;gap:8px;font-size:11px;color:var(--t3);
+  padding:5px 0;border-bottom:1px solid var(--ln);}
+.audit-row:last-child{border-bottom:none;}
+.audit-who{color:var(--teal);font-weight:600;flex-shrink:0;}
+.audit-time{flex-shrink:0;}
+.audit-note{color:var(--t2);flex:1;}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-chip{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--ln2);background:var(--bg3);
+  color:var(--t2);font-family:'Barlow',sans-serif;transition:all .15s;}
+.filter-chip.on{background:var(--td);color:var(--teal);border-color:var(--teal);}
+/* ══ RESPONSIVE ══ */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0 !important;}
+  .hamburger{display:flex !important;}
+  .bottom-nav{display:block;}
+  .page-content{padding:14px 14px 80px;}
+  .sc-stats{grid-template-columns:repeat(3,1fr);}
+  .ac-stats{grid-template-columns:repeat(2,1fr);}
+  .lesson-grid{grid-template-columns:1fr 1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr 1fr;}
+  .prod-row{grid-template-columns:70px 1fr 1fr 1fr;}
+}
+@media(max-width:480px){
+  .sc-stats{grid-template-columns:repeat(2,1fr);}
+  .lesson-grid{grid-template-columns:1fr;}
+  .two-col{grid-template-columns:1fr 1fr;}
+  .lp-cards{grid-template-columns:1fr;}
+}
+
+/* ── LIGHT MODE OVERRIDES ── */
+.light .live-calc{background:var(--bg3);border-top-color:var(--gold);}
+.light .lc-lbl{color:var(--t2);}
+.light .mat-result{background:var(--bg3);}
+.light .sl-icon{box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.light .form-section{box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.light .scada-card{box-shadow:0 1px 6px rgba(0,0,0,.07);}
+.light .lesson-hero{box-shadow:0 1px 6px rgba(0,0,0,.07);}
+.light .tag.free{background:#2ecc7120;color:#1b7a3e;border-color:#2ecc7150;}
+.light .tag.paid{background:#e8a20020;color:#a86000;border-color:#e8a20050;}
+.light .tag.video{background:#00b4a020;color:#007a6e;border-color:#00b4a050;}
+.light .tag.quiz{background:#3498db20;color:#1a6fa8;border-color:#3498db50;}
+.light .lc-val{color:var(--t1);}
+.light .sc-val{color:var(--t1);}
+.light .sc-val.blue{color:#1a6fa8;}
+.light .sc-val.green{color:#1b7a3e;}
+.light .sc-val.yellow{color:#a86000;}
+.light .sc-val.teal{color:#007a6e;}
+.light .f-auto{background:#2ecc7112;border-color:#2ecc7150;color:#1b7a3e;}
+.light .auto-tag{background:#2ecc7115;color:#1b7a3e;border-color:#2ecc7145;}
+.light .info-note{background:#00b4a015;border-color:#00b4a045;color:#007a6e;}
+.light .btn-ghost{background:var(--bg3);color:var(--t2);border-color:var(--ln3);}
+.light .btn-ghost:hover{background:var(--bg4);color:var(--t1);}
+.light .draft-btn{background:var(--bg3);border-color:var(--ln3);color:var(--t1);}
+.light .ni-badge.red{background:#e74c3c18;color:#c0392b;}
+.light .ni-badge.gold{background:#e8a20018;color:#a86000;}
+.light .ni-badge.teal{background:#00b4a018;color:#007a6e;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════ -->
+<div class="screen" id="s-login" style="display:none!important">
+  <div class="login-card">
+    <div class="lc-accent"></div>
+    <div class="lc-body">
+      <div class="lc-logo">
+        <div class="lc-icon">SS</div>
+        <div>
+          <div class="lc-brand">Sup<span>Skill</span></div>
+          <div class="lc-byline">by GLS · Metalliser Training Platform</div>
+        </div>
+      </div>
+
+      <!-- LIVE SCADA STATUS -->
+      <div class="scada-strip">
+        <div class="sc-item"><div class="sc-dot g"></div>Met-1 Running</div>
+        <div class="sc-item"><div class="sc-dot g"></div>Met-2 Running</div>
+        <div class="sc-item"><div class="sc-dot y"></div>Slit-1 Warning</div>
+        <div class="sc-item"><div class="sc-dot g"></div>Slit-2 Running</div>
+      </div>
+
+      <div class="lc-tagline">Signing in via <span>GLSMP account</span> — same login, no new password needed</div>
+
+      <div class="field">
+        <div class="field-label">Employee ID</div>
+        <input class="field-input" type="text" id="login-id" placeholder="e.g. EMP-2041" value="EMP-2041">
+      </div>
+      <div class="field">
+        <div class="field-label">Password</div>
+        <input class="field-input" type="password" placeholder="Your GLSMP password" value="••••••••">
+      </div>
+      <div class="field-hint">Your account is managed by your plant administrator · GLS Metallisers</div>
+      <button class="btn-primary" onclick="doLogin()">Enter SupSkill →</button>
+
+      <div class="lc-bottom">
+        <div class="lang-toggle">
+          <button class="lang-btn" onclick="setLang('en',this)">EN</button>
+          <button class="lang-btn act" onclick="setLang('hi',this)">हि</button>
+        </div>
+        <button class="theme-sw" onclick="toggleTheme()">
+          <span id="theme-lbl">Light mode</span>
+          <div class="sw-track"><div class="sw-thumb"></div></div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════ -->
+<div class="screen active" id="s-app" style="flex-direction:row;">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sl-logo">
+      <div class="sl-icon">SS</div>
+      <div>
+        <div class="sl-brand">Sup<span>Skill</span></div>
+      </div>
+    </div>
+    <div class="sl-user">
+      <div class="sl-av">GS</div>
+      <div>
+        <div class="sl-uname" id="user-name-display">—</div>
+        <div class="sl-urole">Shift Supervisor</div>
+        <div class="sl-uplant">Met-1 · GLS Metallisers</div>
+      </div>
+    </div>
+    <div class="sl-nav">
+      <div class="nl">Main</div>
+      <button class="ni act" onclick="nav('home',this)"><span class="ni-ic">⊞</span>Dashboard</button>
+      <button class="ni" onclick="nav('lessons',this)"><span class="ni-ic">▶</span>Lessons<span class="ni-badge teal">3 New</span></button>
+      <button class="ni" onclick="nav('report-met',this)"><span class="ni-ic">📋</span>Shift Report<span class="ni-badge red">Draft</span></button>
+      <div class="nl">Analytics</div>
+      <button class="ni" onclick="nav('upload',this)"><span class="ni-ic">📊</span>Monthly Analysis</button>
+      <button class="ni" onclick="nav('progress',this)"><span class="ni-ic">📈</span>My Progress</button>
+      <div class="nl">Paid Tools</div>
+      <button class="ni" onclick="nav('calc',this)"><span class="ni-ic">🧮</span>Calculators<span class="ni-badge gold">PAID</span></button>
+      <button class="ni" onclick="openUpgrade()"><span class="ni-ic">⭐</span>Upgrade</button>
+      <div class="nl">Account</div>
+      <button class="ni" onclick="nav('manager-reports',this)" id="ni-mgr-reports" style="display:none;"><span class="ni-ic">📑</span>Reports Review<span class="ni-badge teal" id="mgr-badge">—</span></button>
+      <button class="ni"><span class="ni-ic">👥</span>Team</button>
+      <button class="ni"><span class="ni-ic">⚙️</span>Settings</button>
+      <button class="ni" onclick="logout()"><span class="ni-ic">→</span>Logout</button>
+    </div>
+    <div class="sl-bottom">
+      <div class="sl-lang-row">
+        <span class="sl-lang-lbl">Language</span>
+        <div class="lang-toggle">
+          <button class="lang-btn" onclick="setLang('en',this)">EN</button>
+          <button class="lang-btn act" onclick="setLang('hi',this)">हि</button>
+        </div>
+      </div>
+      <button class="theme-sw" onclick="toggleTheme()">
+        <span id="theme-lbl2">Light mode</span>
+        <div class="sw-track"><div class="sw-thumb"></div></div>
+      </button>
+    </div>
+  </div>
+
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+  <div class="main" id="main-area">
+    <div class="topbar">
+      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <div class="tb-info">
+        <div class="tb-title" id="topbar-greeting">नमस्ते, <span id="greeting-name">—</span></div>
+        <div class="tb-sub" id="topbar-sub">—</div>
+      </div>
+      <div class="tb-right">
+        <div class="machine-pill"><div class="sc-dot g" style="width:7px;height:7px;"></div> Met-1 · Running</div>
+        <div class="notif-btn" onclick="toggleNotif()">🔔<div class="nb-dot"></div></div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION PANEL -->
+    <div class="notif-panel" id="notif-panel">
+      <div class="np-head">🔔 Notifications</div>
+      <div class="np-item"><span class="np-icon">⚡</span><div><div class="np-title">Boat overuse detected · Met-1 Day shift</div><div class="np-sub">Mar 13 · Actual 2.88 vs target 1.70 Pcs/MT</div></div></div>
+      <div class="np-item"><span class="np-icon">✅</span><div><div class="np-title">Shift report submitted · Mar 13 Night</div><div class="np-sub" id="notif-sub-name">— · 18,607 Kgs · 103% efficiency</div></div></div>
+      <div class="np-item"><span class="np-icon">📚</span><div><div class="np-title">New lesson available · Free</div><div class="np-sub">RCO technique — 7 min video added</div></div></div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- ══ HOME PANEL ══ -->
+      <div class="panel act" id="panel-home">
+
+        <!-- SCADA READOUT -->
+        <div class="sec-h fade-up"><span class="sec-title">Live Machine Status</span><button class="sec-link" onclick="nav('report-met',document.querySelector('.ni:nth-child(4)'))">Fill Report →</button></div>
+        <div class="scada-card fade-up d1">
+          <div class="sc-head">
+            <div class="sc-machine">MET-1 <span style="font-size:14px;color:var(--t3)">3300MM</span><small>BOBST · PET10 alubond · Cycle 13.7 min</small></div>
+            <div class="sc-running"><div class="sc-dot g"></div> Metallising</div>
+          </div>
+          <div class="sc-stats">
+            <div class="sc-stat"><div class="sc-val blue">2.41 <span class="sc-unit">OD</span></div><div class="sc-lbl">Deposit OD</div></div>
+            <div class="sc-stat"><div class="sc-val green">11 <span class="sc-unit">m/min</span></div><div class="sc-lbl">Web Speed</div></div>
+            <div class="sc-stat"><div class="sc-val teal">13.7 <span class="sc-unit">min</span></div><div class="sc-lbl">Cycle Time</div></div>
+            <div class="sc-stat"><div class="sc-val yellow">5.8 <span class="sc-unit">kW</span></div><div class="sc-lbl">Boat Power</div></div>
+            <div class="sc-stat"><div class="sc-val green">35 <span class="sc-unit">m</span></div><div class="sc-lbl">Roll Length</div></div>
+          </div>
+          <div class="od-chart-wrap">
+            <div class="od-label">OD Deposit across roll width — positions 1–40</div>
+            <div class="od-bars" id="od-bars"></div>
+          </div>
+          <div class="sc-actions">
+            <button class="btn-gold" onclick="nav('report-met',document.querySelectorAll('.ni')[2])">📋 Fill Shift Report</button>
+            <button class="btn-ghost" onclick="nav('upload',document.querySelectorAll('.ni')[4])">📊 Analysis</button>
+          </div>
+        </div>
+
+        <!-- SMART ALERT -->
+        <div class="alert-strip fade-up d2" onclick="nav('lessons',document.querySelectorAll('.ni')[1])">
+          <span class="as-icon">⚡</span>
+          <div class="as-content">
+            <div class="as-eye">Smart Alert · Based on your shift data</div>
+            <div class="as-title" id="alert-title">Boat consumption 69% above target this week</div>
+            <div class="as-sub" id="alert-sub">3 lessons available to fix this · <span style="color:var(--gold);font-weight:700;">1 paid</span> · Tap to learn →</div>
+          </div>
+          <span class="as-arrow">›</span>
+        </div>
+
+        <!-- TODAY LESSON -->
+        <div class="sec-h fade-up d2"><span class="sec-title" id="today-lesson-lbl">Today's Lesson</span><button class="sec-link" onclick="nav('lessons',document.querySelectorAll('.ni')[1])">All lessons →</button></div>
+        <div class="lesson-hero fade-up d3" onclick="nav('lesson-player',null)">
+          <div class="lh-top"></div>
+          <div class="lh-body">
+            <div class="lh-thumb">⚙️</div>
+            <div class="lh-info">
+              <div class="lh-eye">⚡ 5 min · Metalliser</div>
+              <div class="lh-title" id="today-title">Why boats fail early — and what to track</div>
+              <div class="lh-hi" id="today-hi">नाव जल्दी क्यों खराब होती है</div>
+              <div class="lh-tags">
+                <span class="tag free">Free</span>
+                <span class="tag video">Video</span>
+                <span class="tag quiz">Quiz</span>
+              </div>
+            </div>
+            <button class="lh-play">▶</button>
+          </div>
+        </div>
+
+        <!-- LESSON GRID -->
+        <div class="sec-h fade-up d3"><span class="sec-title" id="continue-lbl">Continue Learning</span><button class="sec-link" onclick="nav('lessons',document.querySelectorAll('.ni')[1])">See all →</button></div>
+        <div class="lesson-grid fade-up d4">
+          <div class="lc done" onclick="nav('lesson-player',null)">
+            <span class="lc-icon">📋</span>
+            <span class="tag free">Free</span>
+            <div class="lc-title">Reading your shift numbers</div>
+            <div class="lc-meta">✓ Completed · 4 min</div>
+          </div>
+          <div class="lc" onclick="nav('lesson-player',null)">
+            <span class="lc-icon">⏱️</span>
+            <span class="tag free">Free</span>
+            <div class="lc-title">What is RCO and why 90 min matters</div>
+            <div class="lc-meta">4 min · Video</div>
+          </div>
+          <div class="lc locked" onclick="openUpgrade()">
+            <span class="lc-icon">🧮</span>
+            <span class="tag paid">Paid</span>
+            <div class="lc-title">Boat target — OD × Micron calculator</div>
+            <div class="lc-meta">7 min · Interactive</div>
+          </div>
+          <div class="lc locked" onclick="openUpgrade()">
+            <span class="lc-icon">📉</span>
+            <span class="tag paid">Paid</span>
+            <div class="lc-title">5-roll RCO in 90 min — step by step</div>
+            <div class="lc-meta">7 min · Video + Timer</div>
+          </div>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="prog-card fade-up d5">
+          <div class="prog-top"><span class="prog-title" id="prog-title">Supervisor Path · मेटलाइज़र</span><span class="prog-count">3 of 9</span></div>
+          <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:35%;transition:width 1.2s ease .5s;"></div></div>
+          <div class="streak-row"><span class="streak-fire">🔥</span><span class="streak-val">7</span><span style="font-size:13px;"> day streak — keep going!</span></div>
+        </div>
+
+      </div>
+
+      <!-- ══ LESSONS PANEL ══ -->
+      <div class="panel" id="panel-lessons">
+        <div class="sec-h"><span class="sec-title" id="all-lessons-lbl">All Lessons</span><span style="font-size:11px;color:var(--t3);">4 free · 6 paid</span></div>
+
+        <!-- RECOMMENDED -->
+        <div class="lesson-hero mb16" onclick="nav('lesson-player',null)">
+          <div class="lh-top" style="background:linear-gradient(90deg,var(--orange),var(--gold))"></div>
+          <div class="lh-body">
+            <div class="lh-thumb">🚨</div>
+            <div class="lh-info">
+              <div class="lh-eye" style="color:var(--orange)">⚡ Recommended · Boat overuse detected on your shifts</div>
+              <div class="lh-title">Why boats fail early — and what to track</div>
+              <div class="lh-hi">नाव जल्दी क्यों खराब होती है</div>
+              <div class="lh-tags"><span class="tag free">Free</span><span class="tag video">Video</span><span class="tag quiz">Quiz</span></div>
+            </div>
+            <button class="lh-play">▶</button>
+          </div>
+        </div>
+
+        <div class="divider-label">⚙️ Metalliser Lessons</div>
+        <div class="lesson-grid mb16">
+          <div class="lc done" onclick="nav('lesson-player',null)"><span class="lc-icon">📋</span><span class="tag free">Free</span><div class="lc-title">Reading shift numbers</div><div class="lc-meta">✓ Done · 4 min</div></div>
+          <div class="lc" onclick="nav('lesson-player',null)"><span class="lc-icon">⚙️</span><span class="tag free">Free</span><div class="lc-title">Why boats fail early</div><div class="lc-meta">5 min · Video + Quiz</div></div>
+          <div class="lc" onclick="nav('lesson-player',null)"><span class="lc-icon">⏱️</span><span class="tag free">Free</span><div class="lc-title">What is RCO</div><div class="lc-meta">4 min · Video</div></div>
+          <div class="lc" onclick="nav('lesson-player',null)"><span class="lc-icon">🌡️</span><span class="tag free">Free</span><div class="lc-title">OD values explained</div><div class="lc-meta">5 min · Cards</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">🧮</span><span class="tag paid">Paid</span><div class="lc-title">Boat target OD × Micron calculator</div><div class="lc-meta">7 min · Interactive</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">📉</span><span class="tag paid">Paid</span><div class="lc-title">5-roll RCO in 90 min</div><div class="lc-meta">7 min · Video + Timer</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">📊</span><span class="tag paid">Paid</span><div class="lc-title">Close the target gap</div><div class="lc-meta">7 min · Data + Quiz</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">🤝</span><span class="tag paid">Paid</span><div class="lc-title">Shift start team briefing</div><div class="lc-meta">6 min · Template</div></div>
+        </div>
+
+        <div class="divider-label">✂️ Slitter Lessons</div>
+        <div class="lesson-grid mb16">
+          <div class="lc" onclick="nav('lesson-player',null)"><span class="lc-icon">🚀</span><span class="tag free">Free</span><div class="lc-title">What limits slit speed — 5 causes</div><div class="lc-meta">5 min · Video</div></div>
+          <div class="lc" onclick="nav('lesson-player',null)"><span class="lc-icon">🌡️</span><span class="tag free">Free</span><div class="lc-title">Understanding OD — Low OD causes</div><div class="lc-meta">5 min · Cards</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">⚡</span><span class="tag paid">Paid</span><div class="lc-title">Safely increase speed without web breaks</div><div class="lc-meta">7 min · Checklist</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">♻️</span><span class="tag paid">Paid</span><div class="lc-title">Waste reduction — cut met waste 30%</div><div class="lc-meta">6 min · Data</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">📐</span><span class="tag paid">Paid</span><div class="lc-title">Crease elimination — tension guide</div><div class="lc-meta">7 min · Video</div></div>
+          <div class="lc locked" onclick="openUpgrade()"><span class="lc-icon">📋</span><span class="tag paid">Paid</span><div class="lc-title">Downgradation root cause method</div><div class="lc-meta">8 min · Case study</div></div>
+        </div>
+      </div>
+
+      <!-- ══ LESSON PLAYER ══ -->
+      <div class="panel" id="panel-lesson-player">
+        <button class="btn-ghost mb12" style="width:fit-content;" onclick="nav('lessons',document.querySelectorAll('.ni')[1])">← Back to lessons</button>
+        <div class="lesson-player">
+          <div class="lp-video">
+            <div style="position:absolute;inset:0;background:var(--bg3);border-radius:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+              <div style="font-size:48px;">⚙️</div>
+              <button class="lp-play-big" onclick="showVideoPlaying()">▶</button>
+              <div class="lp-video-title" id="video-status">Tap to play · 5 min · Free</div>
+            </div>
+          </div>
+          <div class="lp-body">
+            <div class="lp-title">Why boats fail early — and what to track</div>
+            <div class="lp-hi">नाव जल्दी क्यों खराब होती है</div>
+            <div class="lh-tags mb12">
+              <span class="tag free">Free</span><span class="tag video">Video</span>
+              <span class="tag card">4 Cards</span><span class="tag quiz">3 Quiz</span>
+            </div>
+            <div class="lp-desc">Boats are the most expensive consumable on a metalliser. Understanding why they fail — and how to track your consumption correctly — can save your plant thousands of rupees per month.<br><br><em style="color:var(--t3);">नाव मेटलाइज़र पर सबसे महंगी उपभोग्य वस्तु हैं।</em></div>
+
+            <!-- INFO CARDS -->
+            <div class="divider-label">Key Points</div>
+            <div class="lp-cards mb16">
+              <div class="info-card"><h4>🔥 Too high OD = boat stress</h4><p>Running above target OD increases thermal stress on the boat, causing early failure. Keep OD in range.</p></div>
+              <div class="info-card orange"><h4>💧 Contamination</h4><p>Moisture or oil on the film surface causes violent evaporation that cracks boats prematurely.</p></div>
+              <div class="info-card green"><h4>✓ Track per roll</h4><p>Log boats used per roll, not per shift. This shows you exactly which rolls are consuming more boats.</p></div>
+              <div class="info-card red"><h4>⚠ Web break = wasted boat</h4><p>Every web break wastes the remaining life of the current boat. Reducing web breaks directly reduces boat use.</p></div>
+            </div>
+
+            <!-- QUIZ -->
+            <div class="divider-label">Quick Quiz · 3 questions</div>
+            <div class="quiz-box">
+              <div class="quiz-q" id="quiz-q">What is the main cause of boat failure at high OD values?</div>
+              <div class="quiz-opts" id="quiz-opts">
+                <button class="quiz-opt" onclick="answerQuiz(this,false)">Not enough wire feed</button>
+                <button class="quiz-opt" onclick="answerQuiz(this,true)">Thermal stress from running above target OD</button>
+                <button class="quiz-opt" onclick="answerQuiz(this,false)">Too many roll changes</button>
+                <button class="quiz-opt" onclick="answerQuiz(this,false)">Low vacuum pressure</button>
+              </div>
+              <div id="quiz-result" style="display:none;margin-top:10px;font-size:12px;color:var(--green);font-weight:600;padding:8px 12px;background:var(--gd);border-radius:var(--r);">
+                ✓ Correct! Thermal stress from excessive OD is the #1 cause of early boat failure.
+              </div>
+            </div>
+
+            <button class="btn-gold" style="width:100%;margin-top:4px;" onclick="completLesson()">✓ Mark as complete — next lesson →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SHIFT REPORT — METALLISER ══ -->
+      <div class="panel" id="panel-report-met">
+        <div class="sec-h"><span class="sec-title">Shift Report · Met-1</span>
+          <div class="shift-toggle" style="margin-bottom:0;border:none;background:none;width:auto;gap:0;">
+            <button class="shift-btn act" onclick="setShift('day',this)">☀️ Day<span>7AM – 7PM</span></button>
+            <button class="shift-btn" onclick="setShift('night',this)">🌙 Night<span>7PM – 7AM</span></button>
+          </div>
+        </div>
+
+        <!-- REPORT STATUS CHECK -->
+        <div id="report-status-bar" style="display:none;margin:8px 14px 0;"></div>
+
+        <!-- STEPS -->
+        <div class="form-steps">
+          <div class="step-item done"><div class="step-dot">✓</div><div class="step-lbl">Header</div></div>
+          <div class="step-item done"><div class="step-dot">✓</div><div class="step-lbl">Time Log</div></div>
+          <div class="step-item active"><div class="step-dot">3</div><div class="step-lbl">Production</div></div>
+          <div class="step-item"><div class="step-dot">4</div><div class="step-lbl">Consumables</div></div>
+          <div class="step-item"><div class="step-dot">5</div><div class="step-lbl">Submit</div></div>
+        </div>
+
+        <!-- SECTION 1: HEADER -->
+        <div class="form-section">
+          <div class="fs-head"><div class="fs-num done">✓</div><h3>Shift Header</h3><button class="fs-edit">Edit</button></div>
+          <div class="fs-body">
+            <div class="info-note">✦ Date, shift, machine &amp; supervisor auto-filled from your GLSMP login</div>
+            <div class="two-col">
+              <div class="mb8">
+                <div class="f-label">Date <span class="auto-tag">Auto</span></div>
+                <div style="position:relative;">
+                  <div class="f-auto" id="form-date-display" style="cursor:pointer;" onclick="toggleDatePicker()">— ✓ <span style="font-size:10px;color:var(--teal);margin-left:auto;">Change</span></div>
+                  <input type="date" id="date-picker-input" style="position:absolute;opacity:0;top:0;left:0;width:100%;height:100%;cursor:pointer;z-index:2;" onchange="onDatePicked(this.value)">
+                </div>
+                <div id="date-note" style="font-size:10px;color:var(--t3);margin-top:3px;"></div>
+              </div>
+              <div class="mb8"><div class="f-label">Shift <span class="auto-tag">Auto</span></div><div class="f-auto" id="shift-display">Day 7AM–7PM ✓</div></div>
+            </div>
+            <div class="two-col">
+              <div class="mb8"><div class="f-label">Machine <span class="auto-tag">Auto</span></div><div class="f-auto">Met-1 · 3300MM ✓</div></div>
+              <div class="mb8"><div class="f-label">Supervisor <span class="auto-tag">Auto</span></div><div class="f-auto" id="form-supervisor-name">— ✓</div></div>
+            </div>
+            <div class="mb8">
+              <div class="f-label">Operators on Duty</div>
+              <div class="chips" id="op-chips">
+                <div class="chip"><div class="chip-av">SH</div>Shivam<span class="chip-x" onclick="removeChip(this)">×</span></div>
+                <div class="chip"><div class="chip-av">SU</div>Suriya<span class="chip-x" onclick="removeChip(this)">×</span></div>
+                <div class="chip"><div class="chip-av">SO</div>Sourav<span class="chip-x" onclick="removeChip(this)">×</span></div>
+                <div class="chip"><div class="chip-av">MA</div>Maharchand<span class="chip-x" onclick="removeChip(this)">×</span></div>
+                <button class="add-chip" onclick="addOperator()">＋ Add</button>
+              </div>
+            </div>
+            <div class="two-col">
+              <div><div class="f-label">No. of Rolls</div><input class="f-input" type="number" placeholder="e.g. 5"></div>
+              <div><div class="f-label">Vacuum Time (min)</div><input class="f-input" type="number" placeholder="min"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: TIME LOG -->
+        <div class="form-section">
+          <div class="fs-head"><div class="fs-num done">✓</div><h3>Time Log — Setup &amp; Downtime</h3><button class="fs-edit">Edit</button></div>
+          <div class="fs-body">
+            <div class="two-col mb12">
+              <div><div class="f-label">Vent Time (min)</div><input class="f-input" type="number" placeholder="min"></div>
+              <div><div class="f-label">RCO Base Time (min)</div><input class="f-input" type="number" placeholder="min"></div>
+            </div>
+
+            <div class="divider-label">Setup Losses — add each entry separately</div>
+            <div class="setup-group" id="setup-entries">
+              <div class="setup-entry">
+                <select class="entry-select"><option selected>RCO (Roll Change Over)</option><option>Boat Change</option><option>Deep Cleaning</option><option>OD Calibration</option><option>Wire Tube Set</option><option>Safety Meeting</option><option>Other setup</option></select>
+                <input class="entry-mins" type="number" placeholder="min">
+                <button class="rm-btn" onclick="removeEntry(this)">×</button>
+              </div>
+              <div class="setup-entry">
+                <select class="entry-select"><option>RCO (Roll Change Over)</option><option selected>Boat Change</option><option>Deep Cleaning</option><option>OD Calibration</option><option>Wire Tube Set</option><option>Safety Meeting</option><option>Other setup</option></select>
+                <input class="entry-mins" type="number" placeholder="min">
+                <button class="rm-btn" onclick="removeEntry(this)">×</button>
+              </div>
+            </div>
+            <button class="add-entry" onclick="addSetupEntry()">＋ Add another setup entry</button>
+
+            <div class="divider-label" style="margin-top:14px;">Unplanned Downtime</div>
+            <div id="dt-entries">
+              <div class="setup-entry">
+                <select class="entry-select"><option selected>Web Break</option><option>Wire Problem</option><option>Mechanical</option><option>E&amp;I / Electrical</option><option>Power Failure</option><option>Utility</option><option>No Orders</option><option>No Feed / No RM</option><option>Other</option></select>
+                <input class="entry-mins" type="number" placeholder="min">
+                <button class="rm-btn" onclick="removeEntry(this)">×</button>
+              </div>
+            </div>
+            <button class="add-entry" onclick="addDTEntry()">＋ Add another downtime entry</button>
+
+            <div class="dt-summary">
+              <span style="font-size:12px;font-weight:600;color:var(--t1);">Total Downtime</span>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800;color:var(--red);" id="total-dt">205 min</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: PRODUCTION -->
+        <div class="form-section">
+          <div class="fs-head"><div class="fs-num">3</div><h3>Production Output (Kgs)</h3></div>
+          <div class="fs-body">
+            <div class="prod-row" style="margin-bottom:4px;">
+              <div></div>
+              <div style="text-align:center;font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;">2.2 OD</div>
+              <div style="text-align:center;font-size:9px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;">2.5 OD</div>
+              <div style="text-align:center;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;">2.8 OD</div>
+            </div>
+            <div class="prod-row">
+              <span class="prod-row-lbl" style="color:var(--blue);">8 Mic</span>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.2 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.5 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.8 OD</div><input type="number" placeholder="—"></div>
+            </div>
+            <div class="prod-row">
+              <span class="prod-row-lbl" style="color:var(--teal);">10 Mic</span>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.2 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.5 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.8 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+            </div>
+            <div class="prod-row">
+              <span class="prod-row-lbl" style="color:var(--orange);">12+ Mic</span>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.2 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.5 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+              <div class="prod-cell"><div class="prod-cell-lbl">2.8 OD</div><input type="number" placeholder="0" oninput="calcOutput()"></div>
+            </div>
+            <div class="prod-row">
+              <span class="prod-row-lbl" style="color:var(--purple);">AlOx</span>
+              <div class="prod-cell" style="grid-column:span 3;"><div class="prod-cell-lbl">All OD types (Kgs)</div><input type="number" placeholder="0" style="width:100%;" oninput="calcOutput()"></div>
+            </div>
+
+            <!-- LIVE CALC -->
+            <div class="live-calc" id="live-calc">
+              <div class="lc-stat"><div class="lc-val" id="lc-total" style="color:var(--gold);">8,881</div><div class="lc-lbl">Total Kgs</div></div>
+              <div class="lc-div"></div>
+              <div class="lc-stat"><div class="lc-val" style="color:var(--t2);">17,962</div><div class="lc-lbl">Target</div></div>
+              <div class="lc-div"></div>
+              <div class="lc-stat"><div class="lc-val" id="lc-gap" style="color:var(--red);">−9,081</div><div class="lc-lbl">Vs Target</div></div>
+              <div class="lc-div"></div>
+              <div class="lc-stat"><div class="lc-val" id="lc-eff" style="color:var(--orange);">49%</div><div class="lc-lbl">Efficiency</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 4: CONSUMABLES -->
+        <div class="form-section">
+          <div class="fs-head"><div class="fs-num">4</div><h3>Consumables</h3></div>
+          <div class="fs-body">
+            <div class="two-col">
+              <div><div class="f-label">Boats Used (Pcs)</div><input class="f-input" type="number" placeholder="e.g. 46" id="input-boats-used"></div>
+              <div><div class="f-label">Wire Used (Spools)</div><input class="f-input" type="number" placeholder="e.g. 7" id="input-wire-used"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="submit-area">
+          <button class="draft-btn">💾 Save draft — continue later</button>
+          <button class="submit-btn" onclick="submitReport()">Submit Shift Report →</button>
+          <div class="submit-note">Supervisor confirms all data · Manager notified instantly · Monthly Excel auto-updates</div>
+        </div>
+      </div>
+
+      <!-- ══ MONTHLY ANALYSIS PANEL ══ -->
+      <div class="panel" id="panel-upload">
+        <div class="sec-h"><span class="sec-title" id="monthly-lbl">Monthly Analysis</span></div>
+
+        <div style="background:var(--bg2);border:1px solid var(--ln2);border-left:3px solid var(--teal);border-radius:var(--r);padding:11px 14px;margin-bottom:14px;font-size:12px;color:var(--t2);line-height:1.6;">
+          <strong style="color:var(--t1);">How it works:</strong> Upload your existing Excel shift report in the same format you use today. SupSkill reads every row, calculates OD×Micron weighted boat targets, finds downtime patterns, and generates a complete analysis — for any past month.
+        </div>
+
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" accept=".xlsx,.xls" onchange="doUpload(this)">
+          <div class="uz-icon">📂</div>
+          <div class="uz-title">Drop your <span>Excel report</span> here</div>
+          <div class="uz-sub">Metalliser or Slitter format · Same columns as your current file<br>Any past month · Data processed securely</div>
+          <div class="uz-formats">
+            <span class="fmt">.xlsx</span><span class="fmt">.xls</span>
+            <span class="fmt">Met Format</span><span class="fmt">Slit Format</span>
+          </div>
+          <button class="uz-btn" onclick="event.stopPropagation()">📤 Choose File</button>
+        </div>
+
+        <!-- ANALYSIS RESULT (shown after upload) -->
+        <div id="analysis-result" style="display:none;">
+          <div class="analysis-card">
+            <div class="ac-head">
+              <div>
+                <div class="ac-title" id="ac-filename">Daily_Reporting_Metallisers_Mar_2026.xlsx</div>
+                <div class="ac-file">31 active shifts · MET-1 + MET-2 · Mar 1–13 2026</div>
+              </div>
+              <div class="ac-badge">✓ Analysed</div>
+            </div>
+            <div class="ac-stats">
+              <div class="ac-stat"><div class="ac-val" style="color:var(--yellow)">98.8%</div><div class="ac-lbl">Avg Efficiency</div></div>
+              <div class="ac-stat"><div class="ac-val" style="color:var(--red)">94%</div><div class="ac-lbl">Boat Overuse Shifts</div></div>
+              <div class="ac-stat"><div class="ac-val" style="color:var(--red)">48%</div><div class="ac-lbl">RCO Exceeded</div></div>
+              <div class="ac-stat"><div class="ac-val" style="color:var(--blue)">45.6h</div><div class="ac-lbl">No Feed Lost</div></div>
+            </div>
+            <div class="ac-insights">
+              <div class="ac-insight"><span class="aci-icon">🚨</span><div class="aci-text"><strong>Boat consumption 69% over flat target</strong> — after OD×Micron weighted recalculation, 4 shifts marked "overuse" were actually on target. Real overuse: 13 shifts, not 17.</div></div>
+              <div class="ac-insight"><span class="aci-icon">⏱️</span><div class="aci-text"><strong>RCO exceeded 90 min in 15 of 31 shifts</strong> — worst was 190 min. Avg only 3.8 rolls vs target 5. Night shift performs better on RCO.</div></div>
+              <div class="ac-insight"><span class="aci-icon">📊</span><div class="aci-text"><strong>MET-1 Night is best performer</strong> at 101.8% efficiency. MET-2 Night is lowest at 95.4%. Same machine, different team — a training opportunity.</div></div>
+              <div class="ac-insight"><span class="aci-icon">💡</span><div class="aci-text"><strong>3 SupSkill lessons directly address these issues.</strong> Supervisors who completed the RCO lesson averaged 12% better RCO times.</div></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:14px;">
+              <button class="btn-gold" style="font-size:13px;padding:10px 14px;">Download PDF Report</button>
+              <button class="btn-ghost" style="font-size:13px;padding:10px 14px;">Share with Manager</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREVIOUS UPLOADS -->
+        <div class="sec-h" style="margin-top:4px;"><span class="sec-title">Previous Analyses</span></div>
+        <div class="prev-uploads">
+          <div class="prev-item"><span style="font-size:20px;">📊</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--t1);">Metalliser · Feb 2026</div><div style="font-size:11px;color:var(--t3);">Uploaded 2 Mar · 28 shifts · Avg eff 97.2%</div></div><span style="font-size:12px;color:var(--teal);font-weight:600;">View →</span></div>
+          <div class="prev-item"><span style="font-size:20px;">📊</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--t1);">Slitter · Feb 2026</div><div style="font-size:11px;color:var(--t3);">Uploaded 2 Mar · 43 shifts · Speed 59% of target</div></div><span style="font-size:12px;color:var(--teal);font-weight:600;">View →</span></div>
+          <div class="prev-item"><span style="font-size:20px;">📊</span><div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--t1);">Metalliser · Jan 2026</div><div style="font-size:11px;color:var(--t3);">Uploaded 3 Feb · 56 shifts · Boat overuse 72%</div></div><span style="font-size:12px;color:var(--teal);font-weight:600;">View →</span></div>
+        </div>
+      </div>
+
+      <!-- ══ PROGRESS PANEL ══ -->
+      <div class="panel" id="panel-progress">
+        <div class="sec-h"><span class="sec-title" id="prog-panel-title">My Progress</span></div>
+        <div class="stats-grid mb16">
+          <div class="stat-card"><div class="stat-val" style="color:var(--teal)">3</div><div class="stat-lbl">Lessons Done</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:var(--gold)">23</div><div class="stat-lbl">Shifts Filed</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:var(--green)">87%</div><div class="stat-lbl">Quiz Avg</div></div>
+        </div>
+        <div class="prog-card">
+          <div class="prog-top"><span class="prog-title">Supervisor Path · मेटलाइज़र</span><span class="prog-count">3 of 9</span></div>
+          <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:35%;transition:width 1.2s ease .3s;"></div></div>
+          <div class="streak-row mt8"><span class="streak-fire">🔥</span><span class="streak-val">7</span><span style="font-size:13px;"> day streak</span></div>
+        </div>
+        <div class="prog-card">
+          <div class="prog-top"><span class="prog-title">Slitter Path</span><span class="prog-count">1 of 6</span></div>
+          <div class="prog-bar-bg"><div class="prog-bar-fill" style="width:17%;background:var(--orange);transition:width 1.2s ease .5s;"></div></div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--ln2);border-radius:var(--rl);padding:14px 18px;">
+          <div class="divider-label">Recent Activity</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:10px;font-size:12px;"><span style="color:var(--teal);">✓</span><span style="color:var(--t2);">Completed: Reading shift numbers · Mar 13</span></div>
+            <div style="display:flex;gap:10px;font-size:12px;"><span style="color:var(--green);">📋</span><span style="color:var(--t2);">Submitted shift report · Met-1 Day · Mar 13</span></div>
+            <div style="display:flex;gap:10px;font-size:12px;"><span style="color:var(--yellow);">⚡</span><span style="color:var(--t2);">Smart alert: Boat overuse detected · Mar 12</span></div>
+            <div style="display:flex;gap:10px;font-size:12px;"><span style="color:var(--teal);">✓</span><span style="color:var(--t2);">Completed: OD values explained · Mar 11</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CALCULATORS PANEL ══ -->
+      <div class="panel" id="panel-calc">
+        <div class="sec-h"><span class="sec-title">Calculators</span><span class="tag paid" style="font-size:10px;">Paid</span></div>
+
+        <div class="calc-header">
+          <div class="calc-badge">⭐ Premium Tool</div>
+          <div class="calc-title">Boat Consumption — OD × Micron Weighted Target</div>
+          <div class="calc-desc">Enter your plant's target values for each product combination. SupSkill calculates the correct weighted boats/MT target for every shift automatically — no more flat targets that unfairly penalise 2.8 OD shifts.</div>
+        </div>
+
+        <div class="matrix-table-wrap">
+          <div class="mt-head"><h3>🎯 Target Boats/MT — Micron × OD</h3></div>
+          <div style="padding:14px 16px;">
+            <table class="matrix">
+              <thead>
+                <tr>
+                  <th class="mic-col">Micron</th>
+                  <th style="background:#3498db12;color:var(--blue);">2.2 OD</th>
+                  <th style="background:#e8a20012;color:var(--gold);">2.5 OD</th>
+                  <th style="background:#e74c3c12;color:var(--red);">2.8 OD</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background:#3498db08;">
+                  <td class="mic-lbl mic8">8 Mic</td>
+                  <td><input class="mat-input od22" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input od25" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input na-cell" type="number" placeholder="N/A" disabled></td>
+                </tr>
+                <tr style="background:#00b4a008;">
+                  <td class="mic-lbl mic10">10 Mic</td>
+                  <td><input class="mat-input od22" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input od25" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input od28" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                </tr>
+                <tr style="background:#e67e2208;">
+                  <td class="mic-lbl mic12">12+ Mic</td>
+                  <td><input class="mat-input od22" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input od25" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input od28" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                </tr>
+                <tr style="background:#9b6ef008;">
+                  <td class="mic-lbl alox-c">AlOx</td>
+                  <td><input class="mat-input od22" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input od25" type="number" step=".1" placeholder="—" oninput="calcWeighted()"></td>
+                  <td><input class="mat-input na-cell" type="number" placeholder="N/A" disabled></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="mat-result">
+              <div class="lc-stat"><div class="lc-val" id="mat-weighted" style="color:var(--gold);">—</div><div class="lc-lbl">Weighted Target</div></div>
+              <div class="lc-div"></div>
+              <div class="lc-stat"><div class="lc-val" style="color:var(--t3);">1.70</div><div class="lc-lbl">Old Flat Target</div></div>
+              <div class="lc-div"></div>
+              <div class="lc-stat"><div class="lc-val" id="mat-diff" style="color:var(--t3);">—</div><div class="lc-lbl">Difference</div></div>
+              <div class="lc-div"></div>
+              <div class="lc-stat">
+                <button class="btn-teal" style="font-size:13px;padding:7px 14px;" onclick="saveMatrix()">Save →</button>
+              </div>
+            </div>
+            <div id="mat-saved" style="font-size:12px;color:var(--green);text-align:center;min-height:16px;padding:4px 0;"></div>
+          </div>
+        </div>
+
+        <!-- WIRE CONSUMPTION TEASER -->
+        <div class="analysis-card" style="opacity:.6;cursor:pointer;" onclick="openUpgrade()">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:28px;">🔌</span>
+            <div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--t1);">Wire Consumption Analyser</div>
+              <div style="font-size:12px;color:var(--t3);">Target vs actual wire/MT with OD adjustment · Unlock with paid plan</div>
+            </div>
+            <span style="font-size:20px;margin-left:auto;">🔒</span>
+          </div>
+        </div>
+        <div class="analysis-card" style="opacity:.6;cursor:pointer;" onclick="openUpgrade()">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:28px;">📊</span>
+            <div>
+              <div style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--t1);">Shift Efficiency Calculator</div>
+              <div style="font-size:12px;color:var(--t3);">True run time · Output gap · Loss breakdown · Paid only</div>
+            </div>
+            <span style="font-size:20px;margin-left:auto;">🔒</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ MANAGER REPORTS PANEL ══ -->
+      <div class="panel" id="panel-manager-reports">
+        <div class="sec-h">
+          <span class="sec-title">Reports Review</span>
+          <span id="mgr-report-count" style="font-size:11px;color:var(--t3);">Loading...</span>
+        </div>
+
+        <!-- FILTERS -->
+        <div class="filter-bar">
+          <button class="filter-chip on" onclick="filterReports('all',this)">All</button>
+          <button class="filter-chip" onclick="filterReports('MET-1',this)">Met-1</button>
+          <button class="filter-chip" onclick="filterReports('MET-2',this)">Met-2</button>
+          <button class="filter-chip" onclick="filterReports('SLIT-1',this)">Slit-1</button>
+          <button class="filter-chip" onclick="filterReports('SLIT-2',this)">Slit-2</button>
+          <button class="filter-chip" onclick="filterReports('DAY',this)">Day</button>
+          <button class="filter-chip" onclick="filterReports('NIGHT',this)">Night</button>
+        </div>
+
+        <div id="mgr-reports-list">
+          <div style="text-align:center;padding:40px 20px;color:var(--t3);font-size:13px;">
+            Loading reports...
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottom-nav">
+    <div class="bn-wrap">
+      <button class="bn-item act" id="bn-home" onclick="nav('home',null);setBN('bn-home')"><span class="bn-icon">⊞</span>Home</button>
+      <button class="bn-item" id="bn-lessons" onclick="nav('lessons',null);setBN('bn-lessons')"><span class="bn-icon">▶</span>Learn</button>
+      <button class="bn-item" id="bn-report" onclick="nav('report-met',null);setBN('bn-report')"><span class="bn-icon">📋</span>Report</button>
+      <button class="bn-item" id="bn-upload" onclick="nav('upload',null);setBN('bn-upload')"><span class="bn-icon">📊</span>Analysis</button>
+      <button class="bn-item" id="bn-progress" onclick="nav('progress',null);setBN('bn-progress')"><span class="bn-icon">📈</span>Me</button>
+    </div>
+  </div>
+
+</div><!-- /s-app -->
+
+<!-- ══ EDIT REPORT MODAL ══ -->
+<div class="edit-overlay" id="edit-modal">
+  <div class="edit-modal">
+    <div class="edit-modal-head">
+      <div>
+        <h3>✏️ Edit Report</h3>
+        <div id="edit-modal-subtitle" style="font-size:11px;color:var(--t3);margin-top:2px;"></div>
+      </div>
+      <button class="btn-cancel-edit" style="margin-left:auto;padding:6px 12px;" onclick="closeEditModal()">✕</button>
+    </div>
+    <div class="edit-modal-body">
+      <div style="background:var(--od);border:1px solid #e67e2230;border-radius:var(--r);
+        padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--orange);line-height:1.5;">
+        ⚠ You are editing a submitted report. All changes are logged with your name and timestamp.
+      </div>
+
+      <div class="edit-field">
+        <div class="edit-label">Total Output (Kgs)</div>
+        <input class="edit-input" type="number" id="edit-output" placeholder="e.g. 17500">
+      </div>
+      <div class="edit-field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <div class="edit-label">Boats Used (Pcs)</div>
+          <input class="edit-input" type="number" id="edit-boats" placeholder="e.g. 46">
+        </div>
+        <div>
+          <div class="edit-label">Wire Used (Spools)</div>
+          <input class="edit-input" type="number" id="edit-wire" placeholder="e.g. 7">
+        </div>
+      </div>
+      <div class="edit-field" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <div class="edit-label">Total Downtime (min)</div>
+          <input class="edit-input" type="number" id="edit-downtime" placeholder="e.g. 110">
+        </div>
+        <div>
+          <div class="edit-label">No. of Rolls</div>
+          <input class="edit-input" type="number" id="edit-rolls" placeholder="e.g. 5">
+        </div>
+      </div>
+      <div class="edit-field">
+        <div class="edit-label">Supervisor Notes</div>
+        <input class="edit-input" id="edit-notes" placeholder="Any additional notes...">
+      </div>
+
+      <!-- MANDATORY REASON -->
+      <div class="edit-field" style="margin-top:6px;">
+        <div class="edit-reason-label">⚠ Reason for editing (required)</div>
+        <textarea class="edit-reason" id="edit-reason-text"
+          placeholder="Why is this report being edited? e.g. Wrong production figure entered, correcting boat count..."></textarea>
+      </div>
+
+      <!-- AUDIT TRAIL -->
+      <div id="audit-trail-section" style="display:none;margin-top:6px;">
+        <div class="edit-label">Edit history</div>
+        <div id="audit-trail-list" style="margin-top:4px;"></div>
+      </div>
+    </div>
+    <div class="edit-modal-foot">
+      <button class="btn-cancel-edit" onclick="closeEditModal()">Cancel</button>
+      <button class="btn-save-edit" onclick="saveEditedReport()">Save Changes →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ UPGRADE MODAL ══ -->
+<div class="modal-overlay" id="upgrade-modal">
+  <div class="modal">
+    <div class="modal-accent"></div>
+    <div class="modal-body">
+      <div class="modal-icon">⭐</div>
+      <div class="modal-title">Unlock Paid Content</div>
+      <div class="modal-sub" id="modal-sub">Get access to all paid lessons, calculators, and the complete dashboard. Everything you need to understand and improve your shift performance.</div>
+      <ul class="modal-features">
+        <li>Boat consumption OD × Micron calculator — use every shift</li>
+        <li>6 paid video lessons with quizzes and certificates</li>
+        <li>Full shift performance dashboard and trend analysis</li>
+        <li>Smart alerts — lessons triggered by your actual shift data</li>
+        <li>Wire consumption analyser &amp; shift efficiency calculator</li>
+        <li>SupSkill Supervisor Certificate on completion</li>
+      </ul>
+      <div class="modal-price">
+        <div class="mp-card">
+          <div class="mp-tier">Individual</div>
+          <div class="mp-price">₹149</div>
+          <div class="mp-period">per month</div>
+        </div>
+        <div class="mp-card rec">
+          <div class="mp-tier">⭐ Plant Team</div>
+          <div class="mp-price">₹999</div>
+          <div class="mp-period">per month · up to 10</div>
+        </div>
+      </div>
+      <button class="modal-btn">Upgrade Now →</button>
+      <button class="modal-close" onclick="closeUpgrade()">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════ -->
+<script>
+// ══ SUPSKILL STATE ══
+var GLSMP_USER = { name:'', empId:'', role:'supervisor', machine:'Met-1', section:'M1', shift:'DAY', onDuty:[] };
+
+// ── OD BAR CHART (SCADA style) ──
+function drawODBars(){
+  const wrap=document.getElementById('od-bars');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  for(let i=0;i<40;i++){
+    const v=2.2+Math.random()*.4+Math.sin(i*.3)*.1;
+    const pct=((v-1.9)/(2.9-1.9))*100;
+    const bar=document.createElement('div');
+    bar.className='od-bar '+(v>2.5?'y':v>2.3?'g':'b');
+    bar.style.height=Math.max(8,pct)+'%';
+    bar.title='Pos '+(i+1)+': '+v.toFixed(2)+' OD';
+    wrap.appendChild(bar);
+  }
+}
+
+// ── AUTO DATE & SHIFT — fills itself based on real time ──
+function autoFillDateTime(){
+  const now = new Date();
+  const days = ['रविवार','सोमवार','मंगलवार','बुधवार','गुरुवार','शुक्रवार','शनिवार'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthsHi = ['जनवरी','फरवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितंबर','अक्टूबर','नवंबर','दिसंबर'];
+  const d = now.getDate();
+  const m = now.getMonth();
+  const y = now.getFullYear();
+  const hr = now.getHours();
+  const isDay = hr >= 7 && hr < 19;
+  const shiftType = isDay ? 'DAY' : 'NIGHT';
+  const shiftLabelEn = isDay ? 'Day 7AM–7PM' : 'Night 7PM–7AM';
+  const shiftLabelHi = isDay ? 'दिन 7AM–7PM' : 'रात 7PM–7AM';
+  const dateEn = d+' '+months[m]+' '+y;
+  const dateHi = d+' '+monthsHi[m]+' '+y;
+  const dayHi = days[now.getDay()];
+
+  GLSMP_USER.shift = shiftType;
+
+  // Update all date display elements
+  const fd = document.getElementById('form-date-display');
+  if(fd) fd.textContent = dateEn+' ✓';
+
+  const sd = document.getElementById('shift-display');
+  if(sd) sd.textContent = shiftLabelEn+' ✓';
+
+  const ts = document.getElementById('topbar-sub');
+  if(ts) ts.textContent = dayHi+', '+dateHi+' · '+(isDay?'दिन शिफ्ट 07:00–19:00':'रात शिफ्ट 19:00–07:00');
+}
+
+// ── APPLY GLSMP USER — called after postMessage or fallback ──
+function applyGLSMPUser(userData){
+  const name = userData.name || userData.supervisorName || '—';
+  const empId = userData.empId || userData.supervisorId || '';
+  const machine = userData.machine || 'Met-1';
+  GLSMP_USER.name = name;
+  GLSMP_USER.empId = empId;
+  GLSMP_USER.machine = machine;
+  if(userData.shift) GLSMP_USER.shift = userData.shift;
+  if(userData.onDuty) GLSMP_USER.onDuty = userData.onDuty;
+  if(userData.employees) GLSMP_USER.allEmployees = userData.employees;
+
+  // Update every name reference
+  ['user-name-display','greeting-name'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent=name;
+  });
+  const sup = document.getElementById('form-supervisor-name');
+  if(sup) sup.textContent = name+' ✓';
+  const ns = document.getElementById('notif-sub-name');
+  if(ns) ns.textContent = name+' · 18,607 Kgs · 103% efficiency';
+
+  // Machine display
+  const mp = document.getElementById('machine-display');
+  if(mp) mp.textContent = machine;
+
+  // Role-based UI
+  if(userData.role) GLSMP_USER.role = userData.role;
+  const isManager = ['manager','admin'].includes((userData.role||'').toLowerCase());
+  const mgrBtn = document.getElementById('ni-mgr-reports');
+  if(mgrBtn) mgrBtn.style.display = isManager ? 'flex' : 'none';
+
+  // Recheck report status if on report panel
+  if(document.getElementById('panel-report-met')?.classList.contains('act')){
+    setTimeout(checkAndShowReportStatus, 200);
+  }
+
+  // Auto-fill operator chips from onDuty list
+  if(userData.onDuty && userData.onDuty.length > 0){
+    populateOperatorChips(userData.onDuty, name);
+  }
+
+  // Update shift display
+  if(userData.shiftLabel){
+    const sd = document.getElementById('shift-display');
+    if(sd) sd.textContent = userData.shiftLabel+' ✓';
+  }
+  if(userData.date){
+    const fd = document.getElementById('form-date-display');
+    if(fd){
+      const dt = new Date(userData.date);
+      const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      fd.textContent = dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear()+' ✓';
+    }
+  }
+}
+
+// ── POPULATE OPERATOR CHIPS from GLSMP employee list ──
+function populateOperatorChips(employees, supervisorName){
+  const container = document.getElementById('op-chips');
+  if(!container) return;
+  // Clear existing chips (keep add button)
+  const addBtn = container.querySelector('.add-chip');
+  container.innerHTML='';
+  // Add employees who are on duty (excluding supervisor)
+  employees
+    .filter(e => e.onDuty && e.name !== supervisorName)
+    .slice(0,6)
+    .forEach(e=>{
+      const ini = e.name.split(' ').map(n=>n[0]||'').join('').substring(0,2).toUpperCase();
+      const chip = document.createElement('div');
+      chip.className='chip';
+      chip.innerHTML='<div class="chip-av">'+ini+'</div>'+e.name+'<span class="chip-x" onclick="removeChip(this)">×</span>';
+      container.appendChild(chip);
+    });
+  // Re-add the add button
+  if(addBtn) container.appendChild(addBtn);
+  else {
+    const nb=document.createElement('button');
+    nb.className='add-chip';nb.onclick=addOperator;nb.textContent='＋ Add';
+    container.appendChild(nb);
+  }
+}
+
+// ── LOGOUT (just signals GLSMP to take over) ──
+function logout(){
+  try{ window.parent.postMessage({type:'SUPSKILL_LOGOUT'},'*'); }catch(e){}
+}
+
+// ── DATE PICKER — for past date report submission ──
+function toggleDatePicker(){
+  document.getElementById('date-picker-input').click();
+}
+
+function onDatePicked(val){
+  if(!val) return;
+  const dt = new Date(val+'T12:00:00');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dateStr = dayNames[dt.getDay()]+', '+dt.getDate()+' '+months[dt.getMonth()]+' '+dt.getFullYear();
+  const fd = document.getElementById('form-date-display');
+  if(fd) fd.innerHTML = dateStr+' ✓ <span style="font-size:10px;color:var(--teal);margin-left:auto;">Change</span>';
+
+  // Check if this is today or a past date
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const picked = new Date(val);
+  picked.setHours(0,0,0,0);
+  const isPast = picked < today;
+  const note = document.getElementById('date-note');
+  if(note) note.textContent = isPast ? '📅 Past date selected — looking up who was on duty...' : '';
+
+  // Request GLSMP to send employee data for this specific date
+  const dayIdx = dt.getDate() - 1; // 0-indexed
+  const hr = new Date().getHours();
+  const currentShift = document.getElementById('shift-display').textContent.includes('Night') ? 'N' : 'D';
+
+  // Try to get employees from GLSMP for this date
+  try{
+    window.parent.postMessage({
+      type: 'SUPSKILL_REQUEST_SHIFT_DATA',
+      date: val,
+      dayIndex: dayIdx,
+      shift: currentShift
+    }, '*');
+  }catch(e){}
+
+  // Also try local GLSMP data if available (when running inside iframe)
+  lookupGLSMPEmployeesForDate(dayIdx, currentShift);
+
+  // Store picked date and recheck report status
+  GLSMP_USER.reportDate = val;
+  setTimeout(checkAndShowReportStatus, 300);
+  if(note && isPast){
+    setTimeout(()=>{ note.textContent = ''; }, 2500);
+  }
+}
+
+// ── LOOKUP EMPLOYEES FROM GLSMP FOR A SPECIFIC DATE ──
+// Uses the ms[] schedule array from GLSMP employee data
+function lookupGLSMPEmployeesForDate(dayIdx, shiftType){
+  try{
+    // Try to access parent GLSMP's employee data
+    let emps = null;
+
+    // Method 1: Parent window direct access (same origin)
+    try{ emps = window.parent.getEmps ? window.parent.getEmps() : null; }catch(e){}
+
+    // Method 2: Stored in GLSMP_USER from postMessage
+    if(!emps && GLSMP_USER.allEmployees) emps = GLSMP_USER.allEmployees;
+
+    if(!emps || emps.length === 0) return;
+
+    // Filter employees on duty for this date + shift
+    const onDuty = emps.filter(e => {
+      if(!e.ms || !e.ms[dayIdx]) return false;
+      return e.ms[dayIdx] === shiftType || e.ms[dayIdx] === 'G'; // G = General
+    });
+
+    // Find supervisors on this date
+    const supervisors = onDuty.filter(e =>
+      e.designation === 'Supervisor' ||
+      e.accessLevel === 'supervisor' ||
+      (window.parent.EMP_ROLES && window.parent.EMP_ROLES[e.name] &&
+       window.parent.EMP_ROLES[e.name].role === 'sup')
+    );
+
+    // Update operator chips with employees from this specific date
+    if(onDuty.length > 0){
+      populateOperatorChips(onDuty.map(e=>({...e, onDuty:true})), GLSMP_USER.name);
+      const note = document.getElementById('date-note');
+      if(note) note.textContent = '✓ '+onDuty.length+' employees found for this date';
+    }
+
+    // Update supervisor if different
+    if(supervisors.length > 0 && supervisors[0].name !== GLSMP_USER.name){
+      const sup = document.getElementById('form-supervisor-name');
+      if(sup) sup.textContent = supervisors[0].name + ' ✓';
+    }
+  }catch(err){
+    console.warn('lookupGLSMPEmployeesForDate:', err);
+  }
+}
+
+// ── NOTE FOR GLSMP index.html: sendShiftDataToSupSkill() should also pass:
+// role: isAdmin()?'admin':isMgr()?'manager':isSupervisor()?'supervisor':'operator'
+// employees: allEmps (full list for date lookup)
+// Handle SUPSKILL_REQUEST_SHIFT_DATA by looking up emps for dayIndex and replying
+// with type:'GLSMP_SHIFT_DATA_FOR_DATE'
+
+// ── RECEIVE DATA FROM GLSMP via postMessage ──
+window.addEventListener('message', function(e){
+  // Handle employee data for a specific past date
+  if(e.data && e.data.type === 'GLSMP_SHIFT_DATA_FOR_DATE'){
+    const d = e.data;
+    if(d.onDuty && d.onDuty.length > 0){
+      populateOperatorChips(d.onDuty, GLSMP_USER.name);
+      const note = document.getElementById('date-note');
+      if(note) note.textContent = '✓ '+d.onDuty.length+' employees found for '+d.date;
+    }
+    return;
+  }
+  if(!e.data || e.data.type !== 'GLSMP_SHIFT_DATA') return;
+  const d = e.data;
+  applyGLSMPUser({
+    name: d.supervisor ? d.supervisor.name : '',
+    empId: d.supervisor ? d.supervisor.empId : '',
+    shift: d.shift,
+    shiftLabel: d.shiftLabel,
+    date: d.date,
+    onDuty: d.onDuty || [],
+    machine: (d.onDuty && d.onDuty[0] && d.onDuty[0].machine) ? d.onDuty[0].machine : 'Met-1',
+    role: d.role || 'supervisor'
+  });
+});
+
+// ── INIT — runs when app loads (no login needed) ──
+function initSupSkill(){
+  drawODBars();
+  autoFillDateTime();
+  // Default language = Hindi (matching GLSMP)
+  setLang('hi', document.querySelector('.lang-btn[onclick*="hi"]'));
+  // Repeat date every minute in case midnight crosses
+  setInterval(autoFillDateTime, 60000);
+}
+// Run immediately — no login gate
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', initSupSkill);
+} else {
+  initSupSkill();
+}
+
+// ── NAVIGATION ──
+function nav(panelId,navEl){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('act'));
+  const p=document.getElementById('panel-'+panelId);
+  if(p)p.classList.add('act');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+  if(navEl)navEl.classList.add('act');
+  const np=document.getElementById('notif-panel');
+  if(np)np.classList.remove('show');
+  if(window.innerWidth<768)closeSidebar();
+  window.scrollTo(0,0);
+  // Trigger contextual actions
+  if(panelId==='report-met') setTimeout(checkAndShowReportStatus, 100);
+  if(panelId==='manager-reports') loadManagerReports();
+}
+
+function setBN(id){
+  document.querySelectorAll('.bn-item').forEach(b=>b.classList.remove('act'));
+  const el=document.getElementById(id);
+  if(el)el.classList.add('act');
+}
+
+// ── SIDEBAR ──
+function openSidebar(){
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sb-overlay').classList.add('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('show');
+}
+
+// ── NOTIFICATIONS ──
+function toggleNotif(){
+  document.getElementById('notif-panel').classList.toggle('show');
+}
+
+// ── THEME ──
+function toggleTheme(){
+  document.body.classList.toggle('light');
+  const isLight=document.body.classList.contains('light');
+  const txt=isLight?'Dark mode':'Light mode';
+  document.getElementById('theme-lbl').textContent=txt;
+  const lbl2=document.getElementById('theme-lbl2');
+  if(lbl2)lbl2.textContent=txt;
+}
+
+// ── LANGUAGE ──
+let currentLang='en';
+const translations={
+  en:{
+    alert_title:'Boat consumption 69% above target this week',
+    alert_sub:'3 lessons available to fix this · 1 paid · Tap to learn →',
+    today_lesson:'Today\'s Lesson',
+    today_title:'Why boats fail early — and what to track',
+    today_hi:'नाव जल्दी क्यों खराब होती है',
+    continue:'Continue Learning',
+    prog_title:'Supervisor Path · मेटलाइज़र',
+    all_lessons:'All Lessons',
+    monthly:'Monthly Analysis',
+    prog_panel:'My Progress'
+  },
+  hi:{
+    alert_title:'इस सप्ताह नाव की खपत लक्ष्य से 69% अधिक',
+    alert_sub:'3 पाठ उपलब्ध · 1 पेड · सीखने के लिए टैप करें →',
+    today_lesson:'आज का पाठ',
+    today_title:'नाव जल्दी क्यों खराब होती है — ट्रैक कैसे करें',
+    today_hi:'Why boats fail early',
+    continue:'सीखना जारी रखें',
+    prog_title:'सुपरवाइज़र पथ · Metalliser',
+    all_lessons:'सभी पाठ',
+    monthly:'मासिक विश्लेषण',
+    prog_panel:'मेरी प्रगति'
+  }
+};
+function setLang(lang,btn){
+  currentLang=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>{
+    b.classList.toggle('act',b.textContent.trim()===(lang==='en'?'EN':'हि'));
+  });
+  const t=translations[lang];
+  document.getElementById('alert-title').textContent=t.alert_title;
+  document.getElementById('alert-sub').innerHTML=t.alert_sub.replace('1 paid','<span style="color:var(--gold);font-weight:700;">1 paid</span>');
+  document.getElementById('today-lesson-lbl').textContent=t.today_lesson;
+  document.getElementById('today-title').textContent=t.today_title;
+  document.getElementById('today-hi').textContent=t.today_hi;
+  document.getElementById('continue-lbl').textContent=t.continue;
+  const pt=document.getElementById('prog-title');
+  if(pt)pt.textContent=t.prog_title;
+  const al=document.getElementById('all-lessons-lbl');
+  if(al)al.textContent=t.all_lessons;
+  const ml=document.getElementById('monthly-lbl');
+  if(ml)ml.textContent=t.monthly;
+  const pp=document.getElementById('prog-panel-title');
+  if(pp)pp.textContent=t.prog_panel;
+}
+
+// ── SHIFT TOGGLE ──
+function setShift(type,btn){
+  document.querySelectorAll('.shift-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  const display=document.getElementById('shift-display');
+  if(display)display.textContent=type==='day'?'Day 7AM–7PM ✓':'Night 7PM–7AM ✓';
+  const tsub=document.getElementById('topbar-sub');
+  if(tsub)tsub.textContent=`Sat 14 Mar 2026 · ${type==='day'?'Day Shift 07:00–19:00':'Night Shift 19:00–07:00'}`;
+}
+
+// ── OPERATOR CHIPS ──
+function removeChip(el){
+  el.closest('.chip').remove();
+}
+function addOperator(){
+  const name=prompt('Enter operator name (or Employee ID):');
+  if(!name||!name.trim())return;
+  const init=name.trim().substring(0,2).toUpperCase();
+  const chips=document.getElementById('op-chips');
+  const addBtn=chips.querySelector('.add-chip');
+  const chip=document.createElement('div');
+  chip.className='chip';
+  chip.innerHTML=`<div class="chip-av">${init}</div>${name.trim()}<span class="chip-x" onclick="removeChip(this)">×</span>`;
+  chips.insertBefore(chip,addBtn);
+}
+
+// ── SETUP / DT ENTRIES ──
+const setupOptions=`<option>RCO (Roll Change Over)</option><option>Boat Change</option><option>Deep Cleaning</option><option>OD Calibration</option><option>Wire Tube Set</option><option>Safety Meeting</option><option>Other setup</option>`;
+const dtOptions=`<option>Web Break</option><option>Wire Problem</option><option>Mechanical</option><option>E&I / Electrical</option><option>Power Failure</option><option>Utility</option><option>No Orders</option><option>No Feed / No RM</option><option>Other</option>`;
+function makeEntry(opts,removeId){
+  const d=document.createElement('div');d.className='setup-entry';
+  d.innerHTML=`<select class="entry-select">${opts}</select><input class="entry-mins" type="number" placeholder="min"><button class="rm-btn" onclick="removeEntry(this)">×</button>`;
+  return d;
+}
+function addSetupEntry(){
+  const c=document.getElementById('setup-entries');
+  c.appendChild(makeEntry(setupOptions));
+  c.lastChild.querySelector('input').focus();
+}
+function addDTEntry(){
+  const c=document.getElementById('dt-entries');
+  c.appendChild(makeEntry(dtOptions));
+  c.lastChild.querySelector('input').focus();
+}
+function removeEntry(btn){
+  const e=btn.closest('.setup-entry');
+  const p=e.parentElement;
+  if(p.querySelectorAll('.setup-entry').length>1)e.remove();
+}
+
+// ── LIVE OUTPUT CALC ──
+function calcOutput(){
+  const inputs=document.querySelectorAll('#panel-report-met .prod-cell input');
+  let total=0;
+  inputs.forEach(i=>{total+=parseFloat(i.value)||0;});
+  const target=17962;
+  const gap=total-target;
+  const eff=target>0?(total/target*100).toFixed(0):0;
+  document.getElementById('lc-total').textContent=total.toLocaleString('en-IN');
+  document.getElementById('lc-gap').textContent=(gap>=0?'+':'')+gap.toLocaleString('en-IN');
+  document.getElementById('lc-gap').style.color=gap>=0?'var(--green)':'var(--red)';
+  document.getElementById('lc-eff').textContent=eff+'%';
+  document.getElementById('lc-eff').style.color=eff>=100?'var(--green)':eff>=90?'var(--yellow)':'var(--red)';
+}
+// Init calc runs via initSupSkill
+
+// ── REPORT KEY: unique per date+shift+machine ──
+function getReportKey(date, shift, machine){
+  // e.g. "2026-03-14_DAY_MET-1"
+  const d = date || new Date().toISOString().split('T')[0];
+  const s = shift || GLSMP_USER.shift || 'DAY';
+  const m = (machine || GLSMP_USER.machine || 'MET-1').replace(/[^a-zA-Z0-9-]/g,'-');
+  return d+'_'+s+'_'+m;
+}
+
+// ── COLLECT ALL FORM DATA ──
+function collectFormData(){
+  const now = new Date();
+  const dateVal = document.getElementById('form-date-display').textContent.replace(' ✓','').replace(' Change','').trim();
+  const shiftVal = document.getElementById('shift-display').textContent.replace(' ✓','').trim();
+  const supervisorVal = document.getElementById('form-supervisor-name').textContent.replace(' ✓','').trim();
+
+  // Production
+  const inputs = document.querySelectorAll('#panel-report-met .prod-cell input');
+  let totalOutput = 0;
+  inputs.forEach(i=>{ totalOutput += parseFloat(i.value)||0; });
+
+  // Consumables
+  const boats = parseFloat(document.getElementById('input-boats-used')?.value)||0;
+  const wire  = parseFloat(document.getElementById('input-wire-used')?.value)||0;
+
+  // Downtime entries
+  const dtEntries = [];
+  document.querySelectorAll('#dt-entries .setup-entry').forEach(row=>{
+    const type = row.querySelector('select')?.value;
+    const mins = parseFloat(row.querySelector('input')?.value)||0;
+    if(mins>0) dtEntries.push({type, mins});
+  });
+  const totalDT = dtEntries.reduce((s,e)=>s+e.mins,0);
+
+  // Setup entries
+  const setupEntries = [];
+  document.querySelectorAll('#setup-entries .setup-entry').forEach(row=>{
+    const type = row.querySelector('select')?.value;
+    const mins = parseFloat(row.querySelector('input')?.value)||0;
+    if(mins>0) setupEntries.push({type, mins});
+  });
+
+  // Operators
+  const operators = [];
+  document.querySelectorAll('#op-chips .chip').forEach(ch=>{
+    const name = ch.childNodes[1]?.textContent?.trim();
+    if(name) operators.push(name);
+  });
+
+  const target = 17962;
+  const efficiency = target>0 ? Math.round(totalOutput/target*100) : 0;
+
+  return {
+    date: dateVal,
+    shift: shiftVal,
+    machine: GLSMP_USER.machine || 'MET-1',
+    supervisor: supervisorVal,
+    supervisorId: GLSMP_USER.empId || '',
+    operators,
+    totalOutputKg: totalOutput,
+    targetOutputKg: target,
+    efficiency,
+    boatsUsed: boats,
+    wireUsed: wire,
+    totalDowntimeMin: totalDT,
+    downtimeEntries: dtEntries,
+    setupEntries,
+    rolls: parseFloat(document.querySelector('#panel-report-met input[placeholder="e.g. 5"]')?.value)||0,
+    status: 'submitted',
+    submittedAt: now.toISOString(),
+    submittedBy: supervisorVal,
+    editHistory: []
+  };
+}
+
+// ── CHECK IF REPORT EXISTS ──
+async function checkReportExists(key){
+  try{
+    if(window.parent && window.parent._fbAccess){
+      const snap = await window.parent._fbAccess('get','supskillReports/'+key);
+      return snap.val();
+    }
+    // Fallback: localStorage for standalone testing
+    const stored = localStorage.getItem('ss_report_'+key);
+    return stored ? JSON.parse(stored) : null;
+  }catch(e){ return null; }
+}
+
+// ── SAVE REPORT ──
+async function saveReport(key, data){
+  try{
+    if(window.parent && window.parent._fbAccess){
+      await window.parent._fbAccess('set','supskillReports/'+key, data);
+      return true;
+    }
+    // Fallback localStorage
+    localStorage.setItem('ss_report_'+key, JSON.stringify(data));
+    return true;
+  }catch(e){
+    console.error('Save report error:', e);
+    return false;
+  }
+}
+
+// ── CHECK REPORT STATUS WHEN DATE/SHIFT CHANGES ──
+async function checkAndShowReportStatus(){
+  const dateEl = document.getElementById('form-date-display');
+  const shiftEl = document.getElementById('shift-display');
+  if(!dateEl || !shiftEl) return;
+  const date = GLSMP_USER.reportDate || new Date().toISOString().split('T')[0];
+  const shift = shiftEl.textContent.includes('Night') ? 'NIGHT' : 'DAY';
+  const key = getReportKey(date, shift, GLSMP_USER.machine);
+  const existing = await checkReportExists(key);
+  const bar = document.getElementById('report-status-bar');
+  const submitBtn = document.querySelector('.submit-btn');
+  const draftBtn = document.querySelector('.draft-btn');
+
+  if(existing && existing.status === 'submitted'){
+    // Already submitted — lock form
+    bar.style.display='flex';
+    bar.className='report-status-bar submitted';
+    bar.innerHTML=`
+      <span class="rsb-icon">✅</span>
+      <div class="rsb-text">
+        Report already submitted
+        <small>By ${existing.submittedBy||'—'} · ${existing.submittedAt?new Date(existing.submittedAt).toLocaleString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'—'} · ${existing.efficiency||0}% efficiency</small>
+      </div>
+      <button class="rsb-btn" onclick="viewExistingReport('${key}')">View →</button>
+    `;
+    // Disable submit
+    if(submitBtn){ submitBtn.disabled=true; submitBtn.textContent='Already Submitted ✓'; submitBtn.style.background='#2ecc7144'; }
+    if(draftBtn){ draftBtn.disabled=true; draftBtn.style.opacity='.4'; }
+    // Lock all form inputs
+    document.querySelectorAll('#panel-report-met input, #panel-report-met select').forEach(el=>el.disabled=true);
+  } else {
+    // Not yet submitted — form open
+    bar.style.display='none';
+    if(submitBtn){ submitBtn.disabled=false; submitBtn.textContent='Submit Shift Report →'; submitBtn.style.background=''; }
+    if(draftBtn){ draftBtn.disabled=false; draftBtn.style.opacity='1'; }
+    document.querySelectorAll('#panel-report-met input, #panel-report-met select').forEach(el=>el.disabled=false);
+  }
+}
+
+// ── SUBMIT REPORT ──
+async function submitReport(){
+  const btn = document.querySelector('.submit-btn');
+  const reason = '';
+
+  // Validate minimum data
+  const supervisor = document.getElementById('form-supervisor-name')?.textContent?.replace(' ✓','').trim();
+  if(!supervisor || supervisor === '—'){
+    showToast('⚠ Supervisor name not set. Please check GLSMP login.', 'red'); return;
+  }
+
+  const dateEl = document.getElementById('form-date-display');
+  const shiftEl = document.getElementById('shift-display');
+  const date = GLSMP_USER.reportDate || new Date().toISOString().split('T')[0];
+  const shift = shiftEl?.textContent?.includes('Night') ? 'NIGHT' : 'DAY';
+  const key = getReportKey(date, shift, GLSMP_USER.machine);
+
+  // Check duplicate
+  btn.textContent='Checking...'; btn.disabled=true;
+  const existing = await checkReportExists(key);
+  if(existing && existing.status === 'submitted'){
+    showToast('⚠ Report already submitted for this date and shift!', 'red');
+    btn.textContent='Already Submitted ✓'; btn.style.background='#2ecc7144';
+    checkAndShowReportStatus();
+    return;
+  }
+
+  // Collect and save
+  btn.textContent='Saving...';
+  const data = collectFormData();
+  data.reportKey = key;
+  const ok = await saveReport(key, data);
+
+  if(ok){
+    btn.textContent='✓ Submitted!';
+    btn.style.background='linear-gradient(135deg,var(--green),#1a8040)';
+    showToast('✅ Shift report submitted successfully!', 'green');
+    // Notify GLSMP parent
+    try{ window.parent.postMessage({type:'SUPSKILL_REPORT_SUBMITTED', key, data},'*'); }catch(e){}
+    setTimeout(()=>{
+      checkAndShowReportStatus();
+      nav('home',document.querySelector('.ni'));
+      setBN('bn-home');
+    },1800);
+  } else {
+    btn.textContent='Save Failed — Retry';
+    btn.style.background='linear-gradient(135deg,var(--red),#a02020)';
+    btn.disabled=false;
+    showToast('❌ Could not save. Check connection.', 'red');
+  }
+}
+
+// ── VIEW EXISTING REPORT ──
+function viewExistingReport(key){
+  checkReportExists(key).then(data=>{
+    if(!data) return;
+    const isManager = GLSMP_USER.role==='manager' || GLSMP_USER.role==='admin';
+    openEditModal(key, data, isManager);
+  });
+}
+
+// ══ MANAGER FUNCTIONS ══
+
+// ── LOAD ALL REPORTS ──
+async function loadManagerReports(){
+  const list = document.getElementById('mgr-reports-list');
+  if(!list) return;
+  list.innerHTML='<div style="text-align:center;padding:30px;color:var(--t3);font-size:13px;">Loading...</div>';
+
+  try{
+    let reports = {};
+    if(window.parent && window.parent._fbAccess){
+      const snap = await window.parent._fbAccess('get','supskillReports');
+      reports = snap.val() || {};
+    } else {
+      // Fallback localStorage
+      for(let i=0;i<localStorage.length;i++){
+        const k=localStorage.key(i);
+        if(k.startsWith('ss_report_')){ reports[k.replace('ss_report_','')]=JSON.parse(localStorage.getItem(k)); }
+      }
+    }
+    window._allReports = reports;
+    renderReportList(reports, 'all');
+  }catch(e){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--red);font-size:13px;">Error loading reports: '+e.message+'</div>';
+  }
+}
+
+// ── RENDER REPORT LIST ──
+function renderReportList(reports, filter){
+  const list = document.getElementById('mgr-reports-list');
+  if(!list) return;
+  const keys = Object.keys(reports).sort().reverse();
+  const filtered = keys.filter(k=>{
+    if(filter==='all') return true;
+    return k.includes(filter.toUpperCase()) || k.includes(filter);
+  });
+  const cnt = document.getElementById('mgr-report-count');
+  if(cnt) cnt.textContent = filtered.length+' reports';
+  const badge = document.getElementById('mgr-badge');
+  if(badge) badge.textContent = filtered.length;
+
+  if(filtered.length===0){
+    list.innerHTML='<div style="text-align:center;padding:40px 20px;color:var(--t3);font-size:13px;">No reports found</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(k=>{
+    const r = reports[k];
+    const eff = r.efficiency||0;
+    const effClass = eff>=100?'good':eff>=90?'warn':'bad';
+    const shiftClass = (r.shift||'').includes('Night')?'night':'day';
+    const editMark = r.editHistory&&r.editHistory.length>0?'<span style="font-size:10px;color:var(--orange);font-weight:700;margin-left:4px;">Edited</span>':'';
+    const submitted = r.submittedAt?new Date(r.submittedAt).toLocaleDateString('en-IN',{day:'numeric',month:'short'}):'—';
+    return `
+    <div class="report-list-item" onclick="toggleReportDetail('${k}')">
+      <div class="rli-head">
+        <div class="rli-date">${r.machine||'—'}<small>${r.date||'—'}</small></div>
+        <span class="rli-machine">${r.machine||'—'}</span>
+        <span class="rli-shift ${shiftClass}">${(r.shift||'DAY').replace('_',' ')}</span>
+        <span class="rli-sup">${r.supervisor||'—'}${editMark}</span>
+        <span class="rli-eff ${effClass}">${eff}%</span>
+      </div>
+      <div class="rli-body" id="rli-body-${k}">
+        <div class="rli-grid">
+          <div class="rli-stat"><div class="rli-stat-val" style="color:var(--gold)">${(r.totalOutputKg||0).toLocaleString('en-IN')}</div><div class="rli-stat-lbl">Output Kgs</div></div>
+          <div class="rli-stat"><div class="rli-stat-val" style="color:var(--red)">${r.totalDowntimeMin||0}</div><div class="rli-stat-lbl">DT Min</div></div>
+          <div class="rli-stat"><div class="rli-stat-val" style="color:var(--blue)">${r.boatsUsed||0}</div><div class="rli-stat-lbl">Boats Used</div></div>
+          <div class="rli-stat"><div class="rli-stat-val" style="color:var(--t2)">${r.rolls||0}</div><div class="rli-stat-lbl">Rolls</div></div>
+        </div>
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;">
+          Operators: ${(r.operators||[]).join(', ')||'—'} · Submitted: ${submitted}
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="event.stopPropagation();openEditModal('${k}',window._allReports['${k}'],true)"
+            style="flex:1;background:var(--gold);border:none;border-radius:var(--r);padding:8px;
+            font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:#000;cursor:pointer;">
+            ✏️ Edit Report
+          </button>
+          <button onclick="event.stopPropagation();exportReport('${k}')"
+            style="background:var(--bg3);border:1px solid var(--ln2);border-radius:var(--r);padding:8px 14px;
+            font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;font-family:'Barlow',sans-serif;">
+            Export
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleReportDetail(key){
+  const body = document.getElementById('rli-body-'+key);
+  if(body) body.classList.toggle('open');
+}
+
+function filterReports(filter, btn){
+  document.querySelectorAll('.filter-chip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(window._allReports) renderReportList(window._allReports, filter);
+}
+
+// ── OPEN EDIT MODAL ──
+function openEditModal(key, data, canEdit){
+  window._editingKey = key;
+  window._editingData = data;
+  const modal = document.getElementById('edit-modal');
+  const subtitle = document.getElementById('edit-modal-subtitle');
+  if(subtitle) subtitle.textContent = (data.machine||'—')+' · '+(data.date||'—')+' · '+(data.shift||'—')+' · '+( data.supervisor||'—');
+
+  // Pre-fill fields
+  document.getElementById('edit-output').value = data.totalOutputKg||'';
+  document.getElementById('edit-boats').value = data.boatsUsed||'';
+  document.getElementById('edit-wire').value = data.wireUsed||'';
+  document.getElementById('edit-downtime').value = data.totalDowntimeMin||'';
+  document.getElementById('edit-rolls').value = data.rolls||'';
+  document.getElementById('edit-notes').value = data.notes||'';
+  document.getElementById('edit-reason-text').value = '';
+
+  // Disable fields if no edit permission
+  const inputs = document.querySelectorAll('.edit-input, .edit-reason');
+  inputs.forEach(i=>{ i.disabled = !canEdit; });
+  document.querySelector('.btn-save-edit').style.display = canEdit ? 'block' : 'none';
+
+  // Show audit trail
+  const hist = data.editHistory||[];
+  const auditSection = document.getElementById('audit-trail-section');
+  const auditList = document.getElementById('audit-trail-list');
+  if(hist.length>0 && auditSection && auditList){
+    auditSection.style.display='block';
+    auditList.innerHTML = hist.map(h=>`
+      <div class="audit-row">
+        <span class="audit-who">${h.by||'—'}</span>
+        <span class="audit-time">${h.at?new Date(h.at).toLocaleDateString('en-IN',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):''}</span>
+        <span class="audit-note">${h.reason||'—'}</span>
+      </div>`).join('');
+  } else if(auditSection){ auditSection.style.display='none'; }
+
+  modal.classList.add('show');
+}
+
+function closeEditModal(){
+  document.getElementById('edit-modal').classList.remove('show');
+}
+
+// ── SAVE EDITED REPORT ──
+async function saveEditedReport(){
+  const reason = document.getElementById('edit-reason-text').value.trim();
+  if(!reason){ showToast('⚠ Please provide a reason for editing.','red'); return; }
+
+  const key = window._editingKey;
+  const data = {...window._editingData};
+
+  // Apply edits
+  const output = parseFloat(document.getElementById('edit-output').value)||data.totalOutputKg;
+  const boats  = parseFloat(document.getElementById('edit-boats').value)||data.boatsUsed;
+  const wire   = parseFloat(document.getElementById('edit-wire').value)||data.wireUsed;
+  const dt     = parseFloat(document.getElementById('edit-downtime').value)||data.totalDowntimeMin;
+  const rolls  = parseFloat(document.getElementById('edit-rolls').value)||data.rolls;
+  const notes  = document.getElementById('edit-notes').value;
+
+  data.totalOutputKg = output;
+  data.boatsUsed = boats;
+  data.wireUsed = wire;
+  data.totalDowntimeMin = dt;
+  data.rolls = rolls;
+  data.notes = notes;
+  data.efficiency = data.targetOutputKg>0 ? Math.round(output/data.targetOutputKg*100) : 0;
+
+  // Append to audit trail
+  if(!data.editHistory) data.editHistory=[];
+  data.editHistory.push({
+    by: GLSMP_USER.name||'Manager',
+    at: new Date().toISOString(),
+    reason,
+    changes: {output,boats,wire,dt,rolls}
+  });
+  data.lastEditedAt = new Date().toISOString();
+  data.lastEditedBy = GLSMP_USER.name||'Manager';
+
+  const saveBtn = document.querySelector('.btn-save-edit');
+  saveBtn.textContent='Saving...'; saveBtn.disabled=true;
+  const ok = await saveReport(key, data);
+  if(ok){
+    showToast('✅ Report updated successfully!','green');
+    closeEditModal();
+    // Refresh list
+    if(document.getElementById('panel-manager-reports').classList.contains('act')) loadManagerReports();
+    if(window._allReports) window._allReports[key] = data;
+  } else {
+    showToast('❌ Save failed. Check connection.','red');
+  }
+  saveBtn.textContent='Save Changes →'; saveBtn.disabled=false;
+}
+
+// ── EXPORT SINGLE REPORT ──
+function exportReport(key){
+  const data = window._allReports?.[key];
+  if(!data){ showToast('Report data not found.','red'); return; }
+  const text = [
+    'SupSkill Shift Report Export',
+    '============================',
+    'Machine: '+data.machine,
+    'Date: '+data.date,
+    'Shift: '+data.shift,
+    'Supervisor: '+data.supervisor,
+    'Operators: '+(data.operators||[]).join(', '),
+    '',
+    'OUTPUT',
+    'Total Output: '+data.totalOutputKg+' Kgs',
+    'Target: '+data.targetOutputKg+' Kgs',
+    'Efficiency: '+data.efficiency+'%',
+    '',
+    'TIME',
+    'Total Downtime: '+data.totalDowntimeMin+' min',
+    '',
+    'CONSUMABLES',
+    'Boats Used: '+data.boatsUsed+' Pcs',
+    'Wire Used: '+data.wireUsed+' Spools',
+    '',
+    'Submitted: '+data.submittedAt,
+    'By: '+data.submittedBy,
+    data.editHistory?.length>0?'(Edited '+data.editHistory.length+' time(s))':'',
+  ].join('
+');
+  const blob = new Blob([text],{type:'text/plain'});
+  const a = document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='Report_'+key+'.txt';
+  a.click();
+}
+
+// ── TOAST NOTIFICATION ──
+function showToast(msg, type){
+  let toast = document.getElementById('ss-toast');
+  if(!toast){
+    toast=document.createElement('div');
+    toast.id='ss-toast';
+    toast.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%);'+
+      'padding:10px 20px;border-radius:30px;font-size:13px;font-weight:700;'+
+      'z-index:9999;transition:opacity .3s;white-space:nowrap;font-family:Barlow,sans-serif;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent=msg;
+  toast.style.background=type==='green'?'#2ecc71':type==='red'?'#e74c3c':'#e8a200';
+  toast.style.color=type==='green'||type==='red'?'#fff':'#000';
+  toast.style.opacity='1';
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>{ toast.style.opacity='0'; },3000);
+}
+
+// ── UPLOAD SIMULATION ──
+function doUpload(input){
+  const fname=(input.files[0]?.name)||'report.xlsx';
+  const zone=document.getElementById('upload-zone');
+  zone.style.borderColor='var(--teal)';
+  zone.innerHTML=`<div class="uz-icon">⏳</div><div class="uz-title">Analysing <span>${fname}</span>…</div><div class="uz-sub">Reading shift rows · Calculating weighted targets · Finding patterns…</div>`;
+  document.getElementById('ac-filename').textContent=fname;
+  setTimeout(()=>{
+    zone.innerHTML=`<div class="uz-icon">✅</div><div class="uz-title" style="color:var(--green)">Analysis Complete</div><div class="uz-sub">${fname} · Processed successfully</div>`;
+    document.getElementById('analysis-result').style.display='block';
+  },2500);
+}
+
+// ── QUIZ ──
+function answerQuiz(btn,correct){
+  document.querySelectorAll('.quiz-opt').forEach(b=>{b.disabled=true;b.style.opacity='.5';});
+  btn.style.opacity='1';
+  if(correct){btn.classList.add('correct');document.getElementById('quiz-result').style.display='block';}
+  else{btn.classList.add('wrong');}
+}
+
+// ── LESSON COMPLETE ──
+function showVideoPlaying(){
+  document.getElementById('video-status').textContent='▶ Playing… 5 min · Why boats fail early';
+}
+function completLesson(){
+  nav('lessons',document.querySelectorAll('.ni')[1]);
+  setBN('bn-lessons');
+}
+
+// ── CALCULATORS ──
+function calcWeighted(){
+  const inputs=document.querySelectorAll('.mat-input:not(.na-cell)');
+  let num=0,den=0;
+  // Simple avg of filled values as demo
+  inputs.forEach(i=>{const v=parseFloat(i.value);if(!isNaN(v)&&v>0){num+=v;den++;}});
+  const el=document.getElementById('mat-weighted');
+  const diff=document.getElementById('mat-diff');
+  if(den>0){
+    const avg=(num/den).toFixed(2);
+    el.textContent=avg;el.style.color='var(--gold)';
+    const d=(avg-1.70).toFixed(2);
+    diff.textContent=(d>0?'+':'')+d;
+    diff.style.color=d>0?'var(--red)':d<0?'var(--teal)':'var(--t2)';
+  } else {el.textContent='—';diff.textContent='—';}
+}
+function saveMatrix(){
+  const inputs=document.querySelectorAll('.mat-input:not(.na-cell)');
+  let filled=0;inputs.forEach(i=>{if(parseFloat(i.value)>0)filled++;});
+  const msg=document.getElementById('mat-saved');
+  if(filled===0){msg.textContent='Enter at least one target value first.';msg.style.color='var(--red)';}
+  else{msg.textContent=`✓ ${filled} target values saved. Shift reports will now use weighted targets automatically.`;msg.style.color='var(--green)';}
+  setTimeout(()=>{msg.textContent='';},4000);
+}
+
+// ── UPGRADE MODAL ──
+function openUpgrade(){
+  document.getElementById('upgrade-modal').classList.add('show');
+}
+function closeUpgrade(){
+  document.getElementById('upgrade-modal').classList.remove('show');
+}
+document.getElementById('upgrade-modal').addEventListener('click',function(e){
+  if(e.target===this)closeUpgrade();
+});
+
+// Close notif on outside click
+document.addEventListener('click',function(e){
+  const np=document.getElementById('notif-panel');
+  const nb=document.querySelector('.notif-btn');
+  if(np&&!np.contains(e.target)&&nb&&!nb.contains(e.target))np.classList.remove('show');
+});
+</script>
+</body>
+</html>
