@@ -14170,8 +14170,8 @@ function exportSchedExcel(){
   rows.push([`Generated: ${new Date().toLocaleString('en-IN')}`]);
   rows.push([]); // blank row
 
-  // Fixed columns: Name | Emp ID | Designation | Weekly Off | Mobile | Joining Date | Machine | Responsibility | Salary
-  const FIXED_COLS = ['Name', 'Emp ID', 'Designation', 'Weekly Off', 'Mobile', 'Joining Date', 'Machine', 'Responsibility', 'Salary (₹/month)'];
+  // Fixed columns: Name | Emp ID | Designation | Weekly Off | Mobile | Joining Date | DOB | Machine | Responsibility | Salary
+  const FIXED_COLS = ['Name', 'Emp ID', 'Designation', 'Weekly Off', 'Mobile', 'Joining Date', 'Date of Birth', 'Machine', 'Responsibility', 'Salary (₹/month)'];
   const SUMMARY_COLS = ['D','N','O','L','G','C/O','HLF','Ab'];
 
   // ROW 1 of header: Date numbers (e.g. 1/4, 2/4 ...)
@@ -14201,10 +14201,11 @@ function exportSchedExcel(){
       const woff     = emp.woff || '';
       const mobile   = emp.phone ? `'${emp.phone}` : ''; // leading ' keeps Excel from dropping leading zeros / treating as number
       const joinDate = emp.joiningDate || '';
+      const dob      = emp.dob || '';
       const machine  = emp.mc || '';
       const resp     = emp.resp || '';
       const salary   = emp.monthlySalary ? Number(emp.monthlySalary) : '';
-      const row = [emp.name, empCode, desig, woff, mobile, joinDate, machine, resp, salary];
+      const row = [emp.name, empCode, desig, woff, mobile, joinDate, dob, machine, resp, salary];
       const counts = {D:0,N:0,O:0,L:0,G:0,'C/O':0,HLF:0,Ab:0};
       dates.forEach(d => {
         const sh = getShift(emp, d) || 'O';
