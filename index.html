@@ -14170,8 +14170,8 @@ function exportSchedExcel(){
   rows.push([`Generated: ${new Date().toLocaleString('en-IN')}`]);
   rows.push([]); // blank row
 
-  // Fixed columns: Name | Emp ID | Designation
-  const FIXED_COLS = ['Name', 'Emp ID', 'Designation'];
+  // Fixed columns: Name | Emp ID | Designation | Weekly Off | Mobile | Joining Date | Machine | Responsibility | Salary
+  const FIXED_COLS = ['Name', 'Emp ID', 'Designation', 'Weekly Off', 'Mobile', 'Joining Date', 'Machine', 'Responsibility', 'Salary (₹/month)'];
   const SUMMARY_COLS = ['D','N','O','L','G','C/O','HLF','Ab'];
 
   // ROW 1 of header: Date numbers (e.g. 1/4, 2/4 ...)
@@ -14181,7 +14181,7 @@ function exportSchedExcel(){
   }), ...SUMMARY_COLS];
 
   // ROW 2 of header: Weekday names (e.g. Wed, Thu ...)
-  const dayNameRow = ['', '', '', ...dates.map(d=>{
+  const dayNameRow = [...FIXED_COLS.map(()=>''), ...dates.map(d=>{
     const dt = new Date(d+'T00:00:00');
     return dayNames[dt.getDay()];
   }), ...SUMMARY_COLS.map(()=>'')];
@@ -14196,9 +14196,15 @@ function exportSchedExcel(){
     rows.push([grp.label]);
     members.forEach(emp => {
       // Use emp.empId (real employee code like 30000197), not emp.id (Firebase key)
-      const empCode = emp.empId || emp.id || '';
-      const desig   = emp.designation || '';
-      const row = [emp.name, empCode, desig];
+      const empCode  = emp.empId || emp.id || '';
+      const desig    = emp.designation || '';
+      const woff     = emp.woff || '';
+      const mobile   = emp.phone ? `'${emp.phone}` : ''; // leading ' keeps Excel from dropping leading zeros / treating as number
+      const joinDate = emp.joiningDate || '';
+      const machine  = emp.mc || '';
+      const resp     = emp.resp || '';
+      const salary   = emp.monthlySalary ? Number(emp.monthlySalary) : '';
+      const row = [emp.name, empCode, desig, woff, mobile, joinDate, machine, resp, salary];
       const counts = {D:0,N:0,O:0,L:0,G:0,'C/O':0,HLF:0,Ab:0};
       dates.forEach(d => {
         const sh = getShift(emp, d) || 'O';
